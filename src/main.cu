@@ -6,6 +6,7 @@
 #include  <time.h>
 #include  <string.h>
 #include  <limits.h>
+#include  <chrono>
 
 #include <cuda.h>
 #include <cuda_runtime.h>
