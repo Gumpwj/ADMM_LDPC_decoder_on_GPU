@@ -98,8 +98,8 @@ bool InitCUDA()
     }
 
     cudaSetDevice(i);
-    cudaDeviceSynchronize();
-    cudaThreadSynchronize();
+    //cudaDeviceSynchronize();
+    //cudaThreadSynchronize();
     return true;
 }
 
@@ -128,7 +128,7 @@ int main(int argc, char* argv[])
 	double snr_step = 0.50;
 
 	//int algo                  = 0;
-        int NOMBRE_ITERATIONS     = 2;
+        int NOMBRE_ITERATIONS     = 200;
 	//int REAL_ENCODER          =  0;
 	int STOP_TIMER_SECOND     = -1;
         int NB_FRAMES_IN_PARALLEL =  1;
@@ -137,9 +137,9 @@ int main(int argc, char* argv[])
 	bool BER_SIMULATION_LIMIT = false;
 	int  codewords            = 10;//1000000000
 
-        //cudaSetDevice(1);
-        //cudaDeviceSynchronize();
-        //cudaThreadSynchronize();
+        cudaSetDevice(1);
+        cudaDeviceSynchronize();
+        cudaThreadSynchronize();
 
 	//
 	// ON VA PARSER LES ARGUMENTS DE LIGNE DE COMMANDE
