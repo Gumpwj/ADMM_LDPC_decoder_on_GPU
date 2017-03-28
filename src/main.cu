@@ -35,11 +35,11 @@ using namespace std;
 #if 0
 	#define NOEUD       4000
 	#define PARITE      2000
-	#define MESSAGE		12000
+	#define MESSAGE     12000
 #else
 	#define NOEUD       2640
 	#define PARITE      1320
-	#define MESSAGE 	7920
+	#define MESSAGE     7920
 #endif
 
 
@@ -98,21 +98,24 @@ bool InitCUDA()
     }
 
     cudaSetDevice(i);
-
+    cudaDeviceSynchronize();
+    cudaThreadSynchronize();
     return true;
 }
+
+
 
 int main(int argc, char* argv[])
 {
 
        //CUDA 初始化
-    if (!InitCUDA()) {
+       if (!InitCUDA()) {
         return 0;
-    }
+       }
 
 
 	int p;
-    srand( 0 );
+        srand( 0 );
 	printf("(II) LDPC DECODER - Flooding scheduled decoder\n");
 	printf("(II) MANIPULATION DE DONNEES (IEEE-754 - %ld bits)\n", 8*sizeof(int));
 	printf("(II) GENEREE : %s - %s\n", __DATE__, __TIME__);
@@ -124,19 +127,19 @@ int main(int argc, char* argv[])
 	double snr_max  = 4.51;
 	double snr_step = 0.50;
 
-	int algo                  = 0;
+	//int algo                  = 0;
         int NOMBRE_ITERATIONS     = 2;
-	int REAL_ENCODER          =  0;
+	//int REAL_ENCODER          =  0;
 	int STOP_TIMER_SECOND     = -1;
         int NB_FRAMES_IN_PARALLEL =  1;
-	bool   QPSK_CHANNEL         = false;
-        bool   Es_N0                = false;
-	bool   BER_SIMULATION_LIMIT = false;
-	int    codewords            = 1000000000;
+	bool QPSK_CHANNEL         = false;
+        bool Es_N0                = false;
+	bool BER_SIMULATION_LIMIT = false;
+	int  codewords            = 10;//1000000000
 
-    cudaSetDevice(1);
-    cudaDeviceSynchronize();
-    cudaThreadSynchronize();
+        //cudaSetDevice(1);
+        //cudaDeviceSynchronize();
+        //cudaThreadSynchronize();
 
 	//
 	// ON VA PARSER LES ARGUMENTS DE LIGNE DE COMMANDE
@@ -204,7 +207,7 @@ int main(int argc, char* argv[])
 	printf("(II) Code LDPC (N, K)     : (%d,%d)\n", NOEUD, PARITE);
 	printf("(II) Rendement du code    : %.3f\n", rendement);
 	printf("(II) # ITERATIONs du CODE : %d\n", NOMBRE_ITERATIONS);
-    printf("(II) FER LIMIT FOR SIMU   : %d\n", FRAME_ERROR_LIMIT);
+        printf("(II) FER LIMIT FOR SIMU   : %d\n", FRAME_ERROR_LIMIT);
 	printf("(II) SIMULATION  RANGE    : [%.2f, %.2f], STEP = %.2f\n", snr_min,  snr_max, snr_step);
 	printf("(II) MODE EVALUATION      : %s\n", ((Es_N0)?"Es/N0":"Eb/N0") );
 
@@ -236,7 +239,7 @@ int main(int argc, char* argv[])
 		CChanel *noise_1 = new CChanelAWGN2( &simu_data_1, 4, QPSK_CHANNEL, Es_N0);
 		noise_1->configure( Eb_N0 );
 
-        CErrorAnalyzer errCounter(&simu_data_1, FRAME_ERROR_LIMIT);
+                CErrorAnalyzer errCounter(&simu_data_1, FRAME_ERROR_LIMIT);
 
         //
         // ON CREE L'OBJET EN CHARGE DES INFORMATIONS DANS LE TERMINAL UTILISATEUR
@@ -252,13 +255,13 @@ int main(int argc, char* argv[])
 	        noise_1->generate();
 	        errCounter.store_enc_bits();
 
-			int mExeTime = 0;
-		    auto start   = chrono::steady_clock::now();
-		    decoder_1.decode( simu_data_1.get_t_noise_data(), simu_data_1.get_t_decode_data(), NOMBRE_ITERATIONS );
-		    auto end     = chrono::steady_clock::now();
-		    time        += chrono::duration <double, milli> (end - start).count();
+	            //int mExeTime = 0;
+		auto start   = chrono::steady_clock::now();
+		decoder_1.decode( simu_data_1.get_t_noise_data(), simu_data_1.get_t_decode_data(), NOMBRE_ITERATIONS );
+		auto end     = chrono::steady_clock::now();
+	        time        += chrono::duration <double, milli> (end - start).count();
 
-            errCounter.generate();
+                errCounter.generate();
 
             //
             // ON compare le Frame Error avec la limite imposee par l'utilisateur. Si on depasse
@@ -276,14 +279,15 @@ int main(int argc, char* argv[])
             //
             // AFFICHAGE A L'ECRAN DE L'EVOLUTION DE LA SIMULATION SI NECESSAIRE
             //
-			if( (refresh.get_time_sec()) >= 2 )
-            {
+			if( (refresh.get_time_sec()) >= 2 ){
+                                                           
 				refresh.reset();
-            	terminal.temp_report();
+            	                terminal.temp_report();
 			}
 		}
 
-		terminal.final_report();
+		
+                   terminal.final_report();
 
    
                
@@ -292,13 +296,13 @@ int main(int argc, char* argv[])
                 //outfile << terminal.final_report() << endl;
                 //outfile.close();
 
-	    double debit = (1000.0f / (time/errCounter.nb_processed_frames())) * NOEUD / 1000.0f / 1000.0f;
-	    printf("%1.2f : %1.3f Mbps\n", Eb_N0, debit);
+	           double debit = (1000.0f / (time/errCounter.nb_processed_frames())) * NOEUD / 1000.0f / 1000.0f;
+	           printf("%1.2f : %1.3f Mbps\n", Eb_N0, debit);
 
-		Eb_N0 = Eb_N0 + snr_step;
+		   Eb_N0 = Eb_N0 + snr_step;
 
 		// ON FAIT LE MENAGE PARMIS TOUS LES OBJETS CREES DYNAMIQUEMENT...
-        delete noise_1;
+                delete noise_1;
 		delete encoder_1;
 		// FIN DU MENAGE
 
