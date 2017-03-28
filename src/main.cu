@@ -8,6 +8,8 @@
 #include  <limits.h>
 #include  <chrono>
 
+#include <fstream>
+
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <builtin_types.h>
@@ -42,9 +44,73 @@ using namespace std;
 
 
 ////////////////////////////////////////////////////////////////////////////////////
+void printDeviceProp(const cudaDeviceProp &prop)
+{
+    printf("Device Name : %s.\n", prop.name);
+    printf("totalGlobalMem : %ld.\n", prop.totalGlobalMem);
+    printf("sharedMemPerBlock : %ld.\n", prop.sharedMemPerBlock);
+    printf("regsPerBlock : %d.\n", prop.regsPerBlock);
+    printf("warpSize : %d.\n", prop.warpSize);
+    printf("memPitch : %ld.\n", prop.memPitch);
+    printf("maxThreadsPerBlock : %d.\n", prop.maxThreadsPerBlock);
+    printf("maxThreadsDim[0 - 2] : %d %d %d.\n", prop.maxThreadsDim[0], prop.maxThreadsDim[1], prop.maxThreadsDim[2]);
+    printf("maxGridSize[0 - 2] : %d %d %d.\n", prop.maxGridSize[0], prop.maxGridSize[1], prop.maxGridSize[2]);
+    printf("totalConstMem : %ld.\n", prop.totalConstMem);
+    printf("major.minor : %d.%d.\n", prop.major, prop.minor);
+    printf("clockRate : %d.\n", prop.clockRate);
+    printf("textureAlignment : %ld.\n", prop.textureAlignment);
+    printf("deviceOverlap : %d.\n", prop.deviceOverlap);
+    printf("multiProcessorCount : %d.\n", prop.multiProcessorCount);
+}
+
+//CUDA 初始化
+bool InitCUDA()
+{
+    int count;
+
+    //取得支持Cuda的装置的数目
+    cudaGetDeviceCount(&count);
+
+    if (count == 0) {
+        fprintf(stderr, "There is no device.\n");
+        return false;
+    }
+
+    int i;
+
+    for (i = 0; i < count; i++) {
+
+        cudaDeviceProp prop;
+        cudaGetDeviceProperties(&prop, i);
+        //打印设备信息
+        printDeviceProp(prop);
+
+        if (cudaGetDeviceProperties(&prop, i) == cudaSuccess) {
+            if (prop.major >= 1) {
+                break;
+            }
+        }
+    }
+
+    if (i == count) {
+        fprintf(stderr, "There is no device supporting CUDA 1.x.\n");
+        return false;
+    }
+
+    cudaSetDevice(i);
+
+    return true;
+}
 
 int main(int argc, char* argv[])
 {
+
+       //CUDA 初始化
+    if (!InitCUDA()) {
+        return 0;
+    }
+
+
 	int p;
     srand( 0 );
 	printf("(II) LDPC DECODER - Flooding scheduled decoder\n");
@@ -59,16 +125,16 @@ int main(int argc, char* argv[])
 	double snr_step = 0.50;
 
 	int algo                  = 0;
-    int NOMBRE_ITERATIONS     = 200;
+        int NOMBRE_ITERATIONS     = 2;
 	int REAL_ENCODER          =  0;
 	int STOP_TIMER_SECOND     = -1;
-    int NB_FRAMES_IN_PARALLEL =  1;
+        int NB_FRAMES_IN_PARALLEL =  1;
 	bool   QPSK_CHANNEL         = false;
-    bool   Es_N0                = false;
+        bool   Es_N0                = false;
 	bool   BER_SIMULATION_LIMIT = false;
 	int    codewords            = 1000000000;
 
-    cudaSetDevice(0);
+    cudaSetDevice(1);
     cudaDeviceSynchronize();
     cudaThreadSynchronize();
 
@@ -218,6 +284,14 @@ int main(int argc, char* argv[])
 		}
 
 		terminal.final_report();
+
+   
+               
+               // ofstream outfile;
+                //outfile.open("result.txt");
+                //outfile << terminal.final_report() << endl;
+                //outfile.close();
+
 	    double debit = (1000.0f / (time/errCounter.nb_processed_frames())) * NOEUD / 1000.0f / 1000.0f;
 	    printf("%1.2f : %1.3f Mbps\n", Eb_N0, debit);
 
