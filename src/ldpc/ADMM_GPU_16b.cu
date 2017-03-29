@@ -178,45 +178,50 @@ void ADMM_GPU_16b::decode(float* llrs, int* bits, int nb_iters)
 
     /* INITIALISATION DU DECODEUR LDPC SUR GPU */
     ADMM_InitArrays_16b<<<2*blocksPerGridMsgs, threadsPerBlock>>>(LZr, frames * 8448);
-#ifdef CHECK_ERRORS
+    #ifdef CHECK_ERRORS
     ERROR_CHECK(cudaGetLastError( ), __FILE__, __LINE__);
-#endif
+    #endif
 
     /* On copie les donnees d'entree du decodeur */
     cudaMemcpyAsync(d_iLLR, llrs, VNs_per_load * sizeof(float), cudaMemcpyHostToDevice);
 
     ADMM_ScaleLLRs<<<blocksPerGridNode, threadsPerBlock>>>(d_iLLR, VNs_per_load);
-#ifdef CHECK_ERRORS
+    #ifdef CHECK_ERRORS
     ERROR_CHECK(cudaGetLastError( ), __FILE__, __LINE__);
-#endif
+    #endif
 
     // LANCEMENT DU PROCESSUS DE DECODAGE SUR n ITERATIONS
-    for(int k = 0; k < 200; k++)
+    for(int k = 0; k < 600; k++)
     {
-    	ADMM_VN_kernel_deg3_16b_mod<<<blocksPerGridNode,  threadsPerBlock>>>
+    	//ADMM_VN_kernel_deg3_16b_mod<<<blocksPerGridNode,  threadsPerBlock>>>
+        
+    	ADMM_VN_kernel_deg3_16b<<<blocksPerGridNode,  threadsPerBlock>>>
     			(d_iLLR, d_oLLR, LZr, d_t_row, VNs_per_load);
-#ifdef CHECK_ERRORS
+    #ifdef CHECK_ERRORS
         ERROR_CHECK(cudaGetLastError( ), __FILE__, __LINE__);
-#endif
+    #endif
 
-        ADMM_CN_kernel_deg6_16b_mod<<<blocksPerGridCheck, threadsPerBlock>>>
+       // ADMM_CN_kernel_deg6_16b_mod<<<blocksPerGridCheck, threadsPerBlock>>>
+       // 		(d_oLLR, LZr, d_t_col, d_hDecision, CNs_per_load);
+
+        ADMM_CN_kernel_deg6_16b<<<blocksPerGridCheck, threadsPerBlock>>>
         		(d_oLLR, LZr, d_t_col, d_hDecision, CNs_per_load);
-#ifdef CHECK_ERRORS
+    #ifdef CHECK_ERRORS
         ERROR_CHECK(cudaGetLastError( ), __FILE__, __LINE__);
-#endif
+    #endif
 
         // GESTION DU CRITERE D'ARRET DES CODEWORDS
         if( ( k >= 2 ) && ( (k%2) == 0) )
         {
             reduce<<<blocksPerGridCheck, threadsPerBlock>>>(d_hDecision, CNs_per_load);
-#ifdef CHECK_ERRORS
+    #ifdef CHECK_ERRORS
             ERROR_CHECK(cudaGetLastError( ), __FILE__, __LINE__);
-#endif
+    #endif
 
             Status = cudaMemcpy(h_hDecision, d_hDecision, blocksPerGridCheck * sizeof(int), cudaMemcpyDeviceToHost);
-#ifdef CHECK_ERRORS
+    #ifdef CHECK_ERRORS
             ERROR_CHECK(Status, __FILE__, __LINE__);
-#endif
+    #endif
 
             int sum = 0;
             for(int p=0; p<blocksPerGridCheck; p++){
@@ -228,14 +233,14 @@ void ADMM_GPU_16b::decode(float* llrs, int* bits, int nb_iters)
 
     // LANCEMENT DU PROCESSUS DE DECODAGE SUR n ITERATIONS
     ADMM_HardDecision<<<blocksPerGridNode, threadsPerBlock>>>(d_oLLR, d_hDecision, VNs_per_load);
-#ifdef CHECK_ERRORS
+   #ifdef CHECK_ERRORS
     ERROR_CHECK(cudaGetLastError(), __FILE__, __LINE__);
-#endif
+   #endif
 
     // LANCEMENT DU PROCESSUS DE DECODAGE SUR n ITERATIONS
     Status = cudaMemcpy(bits, d_hDecision, VNs_per_load * sizeof(int), cudaMemcpyDeviceToHost);
-#ifdef CHECK_ERRORS
+   #ifdef CHECK_ERRORS
     ERROR_CHECK(Status, __FILE__, __LINE__);
-#endif
+   #endif
 }
 

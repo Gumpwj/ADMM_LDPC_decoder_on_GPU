@@ -120,7 +120,7 @@ int main(int argc, char* argv[])
 	printf("(II) MANIPULATION DE DONNEES (IEEE-754 - %ld bits)\n", 8*sizeof(int));
 	printf("(II) GENEREE : %s - %s\n", __DATE__, __TIME__);
 
-	int    FRAME_ERROR_LIMIT =  100;
+	int    FRAME_ERROR_LIMIT =  200;
 	double BIT_ERROR_LIMIT   =  1e-7;
 
 	double snr_min  = 0.50;
@@ -128,14 +128,14 @@ int main(int argc, char* argv[])
 	double snr_step = 0.50;
 
 	//int algo                  = 0;
-        int NOMBRE_ITERATIONS     = 200;
+        int NOMBRE_ITERATIONS     = 600;
 	//int REAL_ENCODER          =  0;
 	int STOP_TIMER_SECOND     = -1;
         int NB_FRAMES_IN_PARALLEL =  1;
 	bool QPSK_CHANNEL         = false;
         bool Es_N0                = false;
 	bool BER_SIMULATION_LIMIT = false;
-	int  codewords            = 10;//1000000000
+	int  codewords            = 1000;//1000000000
 
         cudaSetDevice(1);
         cudaDeviceSynchronize();

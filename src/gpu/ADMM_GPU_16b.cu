@@ -334,19 +334,27 @@ __global__ void ADMM_InitArrays_16b(float* LZr, int N)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+//ADMML1
+
+//VN 
 __global__ void ADMM_VN_kernel_deg3_16b(
 	const float* _LogLikelihoodRatio, float* OutputFromDecoder, float* LZr, const unsigned int *t_row, int N)
 {
-    const int i         = blockDim.x * blockIdx.x + threadIdx.x;
-	const float mu      = 3.0f;
-	const float  alpha  = 0.8;
-	const float _amu_   = alpha / mu;
-	const float _2_amu_ = _amu_+ _amu_;
-    const float factor  = 1.0f / (3.0f - _2_amu_);
+    const int   idx      = blockDim.x * blockIdx.x + threadIdx.x;
+    const int   idy      = blockDim.y * blockIdx.y + threadIdx.y;
+    const int   i        = idy * N + idx;
+    const float degree   = 1000;
+    const float temp_threshold = degree / 2.0f;
+	const float mu       = 5.5f;//3.0f
+	const float alpha    = 0.8;
+	const float _amu_    = alpha / mu;
+	//const float _2_amu_ = _amu_+ _amu_;
+    //const float factor  = 1.0f / (3.0f - _2_amu_);
     const int   degVn   = 3;
 	const __half2* ptr  = reinterpret_cast<__half2*>(LZr);
+    float xx;
 
-    if (i < N){
+    if ((idx < N) && (idy < N)){
         float temp                  = -_LogLikelihoodRatio[i];
         const int frame_offset      = (i%2640);
         const int num_trame         = (i/2640);
@@ -357,21 +365,168 @@ __global__ void ADMM_VN_kernel_deg3_16b(
         for(int k = 0; k < degVn; k++)
         {
         	const int off = tab[k];
-        	const __half2 data = ptr[ (7920 * num_trame) + off ];
+        	const __half2 data = ptr[ (8448 * num_trame) + off ];
             temp              += ( __high2float(data) + __low2float(data) );
         }
-        const float xx       = (temp  -  _amu_) * factor;
+        
+        if (temp < temp_threshold)
+        //const float xx = (temp  -  _amu_) * factor;
+        xx = (float)1.0 / (float)3.0 * (temp - _amu_);
+        else
+        xx = (float)1.0 / (float)3.0 * (temp + _amu_);
+
         OutputFromDecoder[i] = fmaxf(fminf(xx, 1.0f), 0.0f);
     }
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+__device__ void proj_deg6_v2(float llr[], float v_clip[])
+{
+	const int length = 6;
+
+	#pragma unroll 6
+	for(int i = 0;i < length; i++)
+	{
+		v_clip[i]  = fmin(fmax(llr[i],  0.0f), 1.0f);
+	}
+
+	int   sum_f  = 0;
+	float f[length];
+	#pragma unroll 6
+	for(int i = 0;i < length; i++)
+	{
+		const float value = (v_clip[i] > 0.5f);
+		f[i]   = value;
+		sum_f += (int)value;
+	}
+
+	int is_even = (int)sum_f & 0x01;
+
+	int indice = 0;
+	float minimum = fabs( (0.5f - v_clip[0]) );// < 0 ? (v_clip[0]-0.5) : (0.5f-v_clip[0]);
+	#pragma unroll 6
+	for(int i = 1; i < length; i++)
+	{
+		float tmp = fabs( 0.5f - v_clip[i] );//(tmp < 0) ? -tmp : tmp;
+		indice    = (tmp < minimum)? i : indice;
+	}
+
+	if (is_even == 0)
+	{
+		f[indice] = 1 - f[indice];
+	}
+
+	float v_T[length];
+	#pragma unroll 6
+	for(int i = 0; i < length; i++)
+	{
+		const float value = 1.0f - llr[i];
+		v_T[i] = (f[i] == 1) ? value : llr[i];
+	}
+
+	int   sum_v_T= 0;
+
+	#pragma unroll 6
+	for(int i = 0;i < length; i++)
+	{
+		sum_v_T   += fmin(fmax(v_T[i],  0.0f), 1.0f);
+	}
+
+	if ( sum_v_T >= 1.0f )
+	{
+		return;
+	}
+
+	float sorted[length];
+	sort6( v_T, sorted );
+
+
+		float sum_Mu=0;
+		float s[length];
+		#pragma unroll 6
+		for(int i = 0; i < length; i++)
+		{
+			sum_Mu += sorted[i];
+			s[i]    = (sum_Mu - 1.0f) / (1 + i);
+		}
+
+		// get Rho
+
+		float sRho = s[0];
+		#pragma unroll 5
+		for(int i = 1; i < length; i++)
+		{
+			sRho = (sorted[i] > s[i]) ? s[i] : sRho;
+		}
+
+		float u[length];
+		#pragma unroll 6
+		for(int i = 0;i < length; i++)
+		{
+			const float ui = fmax (v_T[i] - sRho, 0.0f);
+			v_clip[i] = ( f[i] == 1 ) ? (1.0f - ui) : ui;
+		}
+}
+
+//CN
 
 __global__ void ADMM_CN_kernel_deg6_16b(
 	const float *OutputFromDecoder, float *Lzr, const unsigned int *t_col1, int *cn_synrome, int N)
 {
-    const int i = blockDim.x * blockIdx.x + threadIdx.x; // NUMERO DU CHECK NODE A CALCULER
+    const int idx = blockDim.x * blockIdx.x + threadIdx.x; // NUMERO DU CHECK NODE A CALCULER
+    const int idy = blockDim.y * blockIdx.y + threadIdx.y; // NUMERO DU CHECK NODE A CALCULER
+    const int i   = idy * N + idx;
     const float rho      = 1.9f;
+    const float un_m_rho = 1.0f - rho;
+    const int   degCn    = 6;
+    float v_proj[6];
+    float ztemp [6];
+     __half2* ptr = reinterpret_cast<__half2*>(Lzr);
+    float*   PTR = reinterpret_cast<float*>(sdata);
+
+    if ((idx < N) && (idy < N)){
+    const int frame_id     = i/1320;
+    const int frame_offset = i%1320;
+    const int trame_start  = 2640 * (i/1320);
+    const int IND          = 8448 * frame_id; // offset to access mesages from current frame
+    const int indice       = IND + 768 * (frame_offset/128) + frame_offset%128;
+
+    int syndrom = 0;
+
+    unsigned short* cptr         = (unsigned short*)t_col1;//)[]);
+    const uint3 offset           = reinterpret_cast<uint3*>( cptr )[ frame_offset ];
+    const unsigned int    TAB[3] = {offset.x, offset.y, offset.z};
+    const unsigned short* tab    = (const unsigned short*)TAB;
+
+    #pragma unroll 6
+    for(int k = 0; k < degCn; k++)
+        {
+            const float xpred          = OutputFromDecoder[ trame_start + tab[ k ] ];
+            syndrom                   += (xpred > 0.5);
+        	const __half2 data         = ptr[ indice +128 * k ];
+        	const auto contribution    = (rho * xpred) + (un_m_rho * __high2float(data)) - __low2float(data);
+            v_proj[k]                  = contribution;
+            PTR[threadIdx.x + 128 * k] = contribution;
+
+        }
+        cn_synrome[i] = syndrom & 0x01;
+
+        proj_deg6_v2(v_proj, ztemp);
+        //projection_deg6(v_proj, ztemp);
+
+        #pragma unroll 6
+        
+      for(int k = 0; k < degCn; k++)
+        {
+            const float  contr      = PTR[threadIdx.x + 128 * k];
+            float x                 = ztemp[k] - contr;
+            ptr[ indice +128 * k ]  = __halves2half2( __float2half(x), __float2half(ztemp[k]) );
+        }
+    }
+                                     
+                                                                                            
+    /*const float rho      = 1.9f;
     const float un_m_rho = 1.0f - rho;
     const int   degCn    = 6;
     float v_proj[6];
@@ -379,7 +534,7 @@ __global__ void ADMM_CN_kernel_deg6_16b(
     __half2* ptr = reinterpret_cast<__half2*>(Lzr);
     float*   PTR = reinterpret_cast<float*>(sdata);
 
-    if (i < N){
+    if ((idx < N) && (idy <N )){
         const int frame_offset = i%1320;
         const int trame_start  = 2640 * (i/1320);
 
@@ -419,11 +574,14 @@ __global__ void ADMM_CN_kernel_deg6_16b(
             float x            = __low2float(data) + (rho * (ztemp[k] - xpred) + un_m_rho * (ztemp[k] - __high2float(data)));
             ptr[ ind ]         = __halves2half2( __float2half(x), __float2half(ztemp[k]) );
         }
-    }
+    }*/
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+//ADMML2
+
+//VN
 __global__ void ADMM_VN_kernel_deg3_16b_mod(
 	const float* _LogLikelihoodRatio, float* OutputFromDecoder, float* LZr, const unsigned int *t_row, int N)
 {
@@ -457,7 +615,8 @@ __global__ void ADMM_VN_kernel_deg3_16b_mod(
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-__device__ void proj_deg6_v2(float llr[], float v_clip[])
+
+/*__device__ void proj_deg6_v2(float llr[], float v_clip[])
 {
 	const int length = 6;
 
@@ -549,9 +708,9 @@ __device__ void proj_deg6_v2(float llr[], float v_clip[])
 //		{
 //			v_clip[i] = u_T[i];
 //		}
-}
+}*/
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//CN
 
 __global__ void ADMM_CN_kernel_deg6_16b_mod(
 	const float *OutputFromDecoder, float *Lzr, const unsigned int *t_col1, int *cn_synrome, int N)
@@ -605,6 +764,12 @@ __global__ void ADMM_CN_kernel_deg6_16b_mod(
     }
 }
 
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//CN 2
 __global__ void ADMM_CN_kernel_deg6_16b_mod2(
 	const float *OutputFromDecoder, float *Lzr, const unsigned int *t_col1, int *cn_synrome, int N)
 {
@@ -655,9 +820,9 @@ __global__ void ADMM_CN_kernel_deg6_16b_mod2(
         }
     }
 
+
     //////////////////////////////////////////////////////////////////////////////////////////
-    //////////////////////////////////////////////////////////////////////////////////////////
-    //////////////////////////////////////////////////////////////////////////////////////////
+    
 
     __syncthreads();
     unsigned int tid      = threadIdx.x;
