@@ -131,7 +131,7 @@ int main(int argc, char* argv[])
         int NOMBRE_ITERATIONS     = 600;
 	//int REAL_ENCODER          =  0;
 	int STOP_TIMER_SECOND     = -1;
-        int NB_FRAMES_IN_PARALLEL =  1;
+        int NB_FRAMES_IN_PARALLEL =  10;
 	bool QPSK_CHANNEL         = false;
         bool Es_N0                = false;
 	bool BER_SIMULATION_LIMIT = false;

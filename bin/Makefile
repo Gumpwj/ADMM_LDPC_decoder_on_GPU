@@ -1,4 +1,4 @@
-CC=nvcc
+CC=nvcc -g -G
 CFLAGS=-O3 -maxrregcount 32  --compile --use_fast_math -std=c++11 -gencode arch=compute_30,code=sm_30
 LDFLAGS=--cudart static -std=c++11 --relocatable-device-code=false -gencode arch=compute_30,code=sm_30 -lcurand
 

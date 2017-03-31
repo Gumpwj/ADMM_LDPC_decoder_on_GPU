@@ -320,10 +320,40 @@ __device__ void projection_deg6(float llr[], float results[])
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/*__global__ void __FM(const float l, const float h)
+{
+   float val;
+   asm("{  mov.b32 %0, {%1,%2};}\n"
+       : "=r"(val.x) : "h"(l.x), "h"(h.x));
+   return val;
+}
+
+
+__global__ void ADMM_InitArrays_32b(float* LZr, int N)
+{
+    const int   idx      = blockDim.x * blockIdx.x + threadIdx.x;
+    const int   idy      = blockDim.y * blockIdx.y + threadIdx.y;
+    const int   i        = idy * N + idx;
+    if ((idx < N) && (idy < N))
+    {
+    	//__half   t1  = __float2half  ( 0.00f  ); // Lambda
+    	//__half   t2  = __float2half  ( 0.50f  ); // zReplica
+    	//__half2* ptr = reinterpret_cast<__half2*>(LZr);
+    	//ptr[i]       = __halves2half2( t1, t2 );
+    	float   t1 ; // Lambda
+    	float   t2   ( 0.50f  ); // zReplica
+    	float* ptr = reinterpret_cast<float*>(LZr);
+    	ptr[i]       = __FM( t1, t2 );
+    }
+}*/
+
 __global__ void ADMM_InitArrays_16b(float* LZr, int N)
 {
-    const int i = blockDim.x * blockIdx.x + threadIdx.x;
-    if (i < N)
+    //const int i = blockDim.x * blockIdx.x + threadIdx.x;
+    const int   idx      = blockDim.x * blockIdx.x + threadIdx.x;
+    const int   idy      = blockDim.y * blockIdx.y + threadIdx.y;
+    const int   i        = idy * N + idx;
+    if ((idx < N) && (idy < N))
     {
     	__half   t1  = __float2half  ( 0.00f  ); // Lambda
     	__half   t2  = __float2half  ( 0.50f  ); // zReplica
@@ -351,7 +381,8 @@ __global__ void ADMM_VN_kernel_deg3_16b(
 	//const float _2_amu_ = _amu_+ _amu_;
     //const float factor  = 1.0f / (3.0f - _2_amu_);
     const int   degVn   = 3;
-	const __half2* ptr  = reinterpret_cast<__half2*>(LZr);
+    const __half2* ptr  = reinterpret_cast<__half2*>(LZr);//need to revise
+   // const float* ptr  = reinterpret_cast<float*>(LZr);//float
     float xx;
 
     if ((idx < N) && (idy < N)){
@@ -365,8 +396,10 @@ __global__ void ADMM_VN_kernel_deg3_16b(
         for(int k = 0; k < degVn; k++)
         {
         	const int off = tab[k];
-        	const __half2 data = ptr[ (8448 * num_trame) + off ];
-            temp              += ( __high2float(data) + __low2float(data) );
+        	const __half2 data = ptr[ (8448 * num_trame) + off ];//need to revise
+                 temp              += ( __high2float(data) + __low2float(data) );
+                //const float data = ptr[ (8448 * num_trame) + off ];//need to revise
+                 //temp              += ( __high2float(data) + __low2float(data) );//???
         }
         
         if (temp < temp_threshold)
