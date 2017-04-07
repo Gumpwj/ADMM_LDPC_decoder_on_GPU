@@ -11,7 +11,10 @@
 #include <fstream>
 
 #include <cuda.h>
+
 #include <cuda_runtime.h>
+#include <cuda_runtime_api.h>
+
 #include <builtin_types.h>
 
 using namespace std;
@@ -46,72 +49,30 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////////
 void printDeviceProp(const cudaDeviceProp &prop)
 {
-    printf("Device Name : %s.\n", prop.name);
-    printf("totalGlobalMem : %ld.\n", prop.totalGlobalMem);
-    printf("sharedMemPerBlock : %ld.\n", prop.sharedMemPerBlock);
-    printf("regsPerBlock : %d.\n", prop.regsPerBlock);
-    printf("warpSize : %d.\n", prop.warpSize);
-    printf("memPitch : %ld.\n", prop.memPitch);
-    printf("maxThreadsPerBlock : %d.\n", prop.maxThreadsPerBlock);
-    printf("maxThreadsDim[0 - 2] : %d %d %d.\n", prop.maxThreadsDim[0], prop.maxThreadsDim[1], prop.maxThreadsDim[2]);
-    printf("maxGridSize[0 - 2] : %d %d %d.\n", prop.maxGridSize[0], prop.maxGridSize[1], prop.maxGridSize[2]);
-    printf("totalConstMem : %ld.\n", prop.totalConstMem);
-    printf("major.minor : %d.%d.\n", prop.major, prop.minor);
-    printf("clockRate : %d.\n", prop.clockRate);
-    printf("textureAlignment : %ld.\n", prop.textureAlignment);
-    printf("deviceOverlap : %d.\n", prop.deviceOverlap);
-    printf("multiProcessorCount : %d.\n", prop.multiProcessorCount);
+    printf("Device Name : %s\n", prop.name);
+    printf("totalGlobalMem : %ld\n", prop.totalGlobalMem);
+    printf("sharedMemPerBlock : %ld\n", prop.sharedMemPerBlock);
+    printf("regsPerBlock : %d\n", prop.regsPerBlock);
+    printf("warpSize : %d\n", prop.warpSize);
+    printf("memPitch : %ld\n", prop.memPitch);
+    printf("maxThreadsPerBlock : %d\n", prop.maxThreadsPerBlock);
+    printf("maxThreadsDim [x,y,z] : %d %d %d\n", prop.maxThreadsDim[0], prop.maxThreadsDim[1], prop.maxThreadsDim[2]);
+    printf("maxGridSize [x,y,z] : %d %d %d\n", prop.maxGridSize[0], prop.maxGridSize[1], prop.maxGridSize[2]);
+    printf("totalConstMem : %ld\n", prop.totalConstMem);
+    printf("major.minor : %d.%d\n", prop.major, prop.minor);
+    printf("clockRate : %d\n", prop.clockRate);
+    printf("textureAlignment : %ld\n", prop.textureAlignment);
+    printf("deviceOverlap : %d\n", prop.deviceOverlap);
+    printf("multiProcessorCount : %d\n", prop.multiProcessorCount);
+    printf("maxThreadsPerMultiProcessor : %d\n", prop.maxThreadsPerMultiProcessor);
+    printf("pciBusID : %d\n", prop.pciBusID);
+    printf("pciDeviceID : %d\n", prop.pciDeviceID);
+    printf("pciDomainID : %d\n", prop.pciDomainID);
+    printf("computeMode  : %d\n", prop.computeMode);   
 }
-
-//CUDA 初始化
-bool InitCUDA()
-{
-    int count;
-
-    //取得支持Cuda的装置的数目
-    cudaGetDeviceCount(&count);
-
-    if (count == 0) {
-        fprintf(stderr, "There is no device.\n");
-        return false;
-    }
-
-    int i;
-
-    for (i = 0; i < count; i++) {
-
-        cudaDeviceProp prop;
-        cudaGetDeviceProperties(&prop, i);
-        //打印设备信息
-        printDeviceProp(prop);
-
-        if (cudaGetDeviceProperties(&prop, i) == cudaSuccess) {
-            if (prop.major >= 1) {
-                break;
-            }
-        }
-    }
-
-    if (i == count) {
-        fprintf(stderr, "There is no device supporting CUDA 1.x.\n");
-        return false;
-    }
-
-    cudaSetDevice(i);
-    //cudaDeviceSynchronize();
-    //cudaThreadSynchronize();
-    return true;
-}
-
-
 
 int main(int argc, char* argv[])
 {
-
-       //CUDA 初始化
-       if (!InitCUDA()) {
-        return 0;
-       }
 
 
 	int p;
@@ -120,7 +81,11 @@ int main(int argc, char* argv[])
 	printf("(II) MANIPULATION DE DONNEES (IEEE-754 - %ld bits)\n", 8*sizeof(int));
 	printf("(II) GENEREE : %s - %s\n", __DATE__, __TIME__);
 
-	int    FRAME_ERROR_LIMIT =  200;
+
+
+/////////////////////
+
+	int    FRAME_ERROR_LIMIT =  100;
 	double BIT_ERROR_LIMIT   =  1e-7;
 
 	double snr_min  = 0.50;
@@ -128,18 +93,71 @@ int main(int argc, char* argv[])
 	double snr_step = 0.50;
 
 	//int algo                  = 0;
-        int NOMBRE_ITERATIONS     = 600;
+        int NOMBRE_ITERATIONS     = 200;
 	//int REAL_ENCODER          =  0;
 	int STOP_TIMER_SECOND     = -1;
-        int NB_FRAMES_IN_PARALLEL =  10;
+        int NB_FRAMES_IN_PARALLEL =  1;
 	bool QPSK_CHANNEL         = false;
         bool Es_N0                = false;
 	bool BER_SIMULATION_LIMIT = false;
 	int  codewords            = 1000;//1000000000
 
-        cudaSetDevice(1);
-        cudaDeviceSynchronize();
+
+
+
+       // int startDevice = 0;
+       // int endDevice = 0;
+
+////device option1 
+       /*int deviceCount;
+       cudaGetDeviceCount(&deviceCount);
+       int device;
+    
+    for (device = 0; device < deviceCount; ++device) {
+         cudaDeviceProp deviceProp;
+         cudaGetDeviceProperties(&deviceProp, device);
+         cudaGetDeviceProperties(&deviceProp, device);
+         printf("\n");
+         printf("Device %d Information :\n",device);
+         printDeviceProp(deviceProp);
+         printf("\n");
+         printf("We choose Device %d for test :\n",device);
+         printf("\n");
+         cudaSetDevice(1);
+         cudaDeviceSynchronize();
+         cudaThreadSynchronize();
+    }*/
+
+///device option2
+/*int numDevices = 0;  
+cudaGetDeviceCount(&numDevices);  
+if (numDevices > 0) {  
+    int maxMultiprocessors = 0, maxDevice = 0;  
+    for (int device=0; device<numDevices; device++) {  
+        cudaDeviceProp props;  
+        cudaGetDeviceProperties(&props, device);  
+        if (maxMultiprocessors < props.multiProcessorCount) {  
+            maxMultiprocessors = props.multiProcessorCount;  
+            maxDevice = device;  
+        }  
+     printf("Device %d Information :\n",device);
+     printDeviceProp(props);
+     printf("\n");
+    }  
+    cudaSetDevice(maxDevice); 
+    //printf("Device %d Information :\n",maxDevice);
+    printf("We choose Device %d for test :\n",maxDevice);
+    printf("\n");
+    
+    
+//cudaDeviceSynchronize();
+cudaThreadSynchronize();
+}  */
+      cudaSetDevice(0);
+       cudaDeviceSynchronize();
         cudaThreadSynchronize();
+
+ 
 
 	//
 	// ON VA PARSER LES ARGUMENTS DE LIGNE DE COMMANDE
@@ -204,6 +222,7 @@ int main(int argc, char* argv[])
 	}
 
 	double rendement = (double)(NOEUD-PARITE)/(double)(NOEUD);
+        printf("\n");
 	printf("(II) Code LDPC (N, K)     : (%d,%d)\n", NOEUD, PARITE);
 	printf("(II) Rendement du code    : %.3f\n", rendement);
 	printf("(II) # ITERATIONs du CODE : %d\n", NOMBRE_ITERATIONS);
@@ -215,7 +234,7 @@ int main(int argc, char* argv[])
 	CTrame simu_data_1(NOEUD, PARITE, NB_FRAMES_IN_PARALLEL);
 
 //	ADMM_GPU_Decoder decoder_1( NB_FRAMES_IN_PARALLEL );
-//	ADMM_GPU_Decoder decoder_1( NB_FRAMES_IN_PARALLEL );
+	//ADMM_GPU_Decoder decoder_1( NB_FRAMES_IN_PARALLEL );
 	ADMM_GPU_16b decoder_1( NB_FRAMES_IN_PARALLEL );
 
 	double Eb_N0 = snr_min;
@@ -279,7 +298,7 @@ int main(int argc, char* argv[])
             //
             // AFFICHAGE A L'ECRAN DE L'EVOLUTION DE LA SIMULATION SI NECESSAIRE
             //
-			if( (refresh.get_time_sec()) >= 2 ){
+		if( (refresh.get_time_sec()) >= 2 ){
                                                            
 				refresh.reset();
             	                terminal.temp_report();
@@ -287,7 +306,7 @@ int main(int argc, char* argv[])
 		}
 
 		
-                   terminal.final_report();
+                terminal.final_report();
 
    
                
