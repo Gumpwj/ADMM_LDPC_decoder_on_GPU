@@ -9,7 +9,7 @@
 
 /*----------------------------------------------------------------------------*/
 
-#include "../custom/custom_cuda_64b.h"
+#include "../custom/custom_cuda.h"
 
 #define NUMBER_OF_FRAMES     1
 
@@ -63,6 +63,6 @@ public:
     ADMM_GPU_decoder_64b( int frames );
     ~ADMM_GPU_decoder_64b();
     void initialize();
-    void decode(double* llrs, int* bits, int nb_iters);
+    void decode(float* llrs, int* bits, int nb_iters);
 };
 

@@ -26,6 +26,8 @@ extern bool ERROR_CHECK(cudaError_t Status, const char* file, int line);
 
 extern void CUDA_MALLOC_HOST(float** ptr, int nbElements);
 
+extern void CUDA_MALLOC_HOST(double** ptr, int nbElements);
+
 extern void CUDA_MALLOC_HOST(int** ptr, int nbElements);
 
 extern void CUDA_MALLOC_HOST(unsigned int** ptr, int nbElements);
@@ -33,6 +35,8 @@ extern void CUDA_MALLOC_HOST(unsigned int** ptr, int nbElements);
 extern void CUDA_MALLOC_HOST(char** ptr, int nbElements);
 
 extern void CUDA_MALLOC_DEVICE(float** ptr, int nbElements);
+
+extern void CUDA_MALLOC_DEVICE(double** ptr, int nbElements);
 
 extern void CUDA_MALLOC_DEVICE(int** ptr, int nbElements);
 

@@ -105,7 +105,7 @@ ADMM_GPU_decoder_64b::~ADMM_GPU_decoder_64b()
 	Status = cudaFree(LZr);				ERROR_CHECK(Status, (char*)__FILE__, __LINE__);
 }
 
-void ADMM_GPU_decoder_64b::decode(double* llrs, int* bits, int nb_iters)
+void ADMM_GPU_decoder_64b::decode(float* llrs, int* bits, int nb_iters)
 {
     cudaError_t Status;
 
@@ -116,7 +116,7 @@ void ADMM_GPU_decoder_64b::decode(double* llrs, int* bits, int nb_iters)
     int blocksPerGridMsgs   = (MSGs_per_load + threadsPerBlock - 1) / threadsPerBlock;
 
     /* On copie les donnees d'entree du decodeur */
-    cudaMemcpyAsync(d_iLLR, llrs, VNs_per_load * sizeof(double), cudaMemcpyHostToDevice);
+    cudaMemcpyAsync(d_iLLR, llrs, VNs_per_load * sizeof(float), cudaMemcpyHostToDevice);
 
     /* INITIALISATION DU DECODEUR LDPC SUR GPU */
     ADMM_InitArrays_64b<<<blocksPerGridMsgs, threadsPerBlock>>>(LZr, MSGs_per_load);
@@ -137,7 +137,7 @@ void ADMM_GPU_decoder_64b::decode(double* llrs, int* bits, int nb_iters)
         ERROR_CHECK(cudaGetLastError( ), __FILE__, __LINE__);
 
         // GESTION DU CRITERE D'ARRET DES CODEWORDS
-        if( (k%5) == 0 )
+        if( ( k >= 2 ) && ( (k%2) == 0) )
         {
             reduce<<<blocksPerGridCheck, threadsPerBlock>>>(d_hDecision, CNs_per_load);
             ERROR_CHECK(cudaGetLastError( ), __FILE__, __LINE__);
