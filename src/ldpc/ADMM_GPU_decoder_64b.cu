@@ -110,7 +110,7 @@ void ADMM_GPU_decoder_64b::decode(float* llrs, int* bits, int nb_iters)
     cudaError_t Status;
 
 
-    int threadsPerBlock     = 128;
+    int threadsPerBlock     = 32;
     int blocksPerGridNode   = (VNs_per_load  + threadsPerBlock - 1) / threadsPerBlock;
     int blocksPerGridCheck  = (CNs_per_load  + threadsPerBlock - 1) / threadsPerBlock;
     int blocksPerGridMsgs   = (MSGs_per_load + threadsPerBlock - 1) / threadsPerBlock;
@@ -137,13 +137,28 @@ void ADMM_GPU_decoder_64b::decode(float* llrs, int* bits, int nb_iters)
         ERROR_CHECK(cudaGetLastError( ), __FILE__, __LINE__);
 
         // GESTION DU CRITERE D'ARRET DES CODEWORDS
-        if( ( k >= 2 ) && ( (k%2) == 0) )
+        if( ( k >= 10 ) && ( (k%2) == 0) )
         {
-            reduce<<<blocksPerGridCheck, threadsPerBlock>>>(d_hDecision, CNs_per_load);
+            /*reduce<<<blocksPerGridCheck, threadsPerBlock>>>(d_hDecision, CNs_per_load);
             ERROR_CHECK(cudaGetLastError( ), __FILE__, __LINE__);
 
             Status = cudaMemcpy(h_hDecision, d_hDecision, blocksPerGridCheck * sizeof(int), cudaMemcpyDeviceToHost);
             ERROR_CHECK(Status, __FILE__, __LINE__);
+
+            int sum = 0;
+            for(int p=0; p<blocksPerGridCheck; p++){
+            	sum += h_hDecision[p];
+            }
+            if( sum == 0 ) break;*/
+                   reduce<<<blocksPerGridCheck, threadsPerBlock>>>(d_hDecision, CNs_per_load);
+    #ifdef CHECK_ERRORS
+            ERROR_CHECK(cudaGetLastError( ), __FILE__, __LINE__);
+    #endif
+
+            Status = cudaMemcpy(h_hDecision, d_hDecision, blocksPerGridCheck * sizeof(int), cudaMemcpyDeviceToHost);
+    #ifdef CHECK_ERRORS
+            ERROR_CHECK(Status, __FILE__, __LINE__);
+    #endif
 
             int sum = 0;
             for(int p=0; p<blocksPerGridCheck; p++){

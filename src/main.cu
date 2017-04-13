@@ -48,7 +48,9 @@ using namespace std;
 
 
 ////////////////////////////////////////////////////////////////////////////////////
-void printDeviceProp(const cudaDeviceProp &prop)
+
+
+/*void printDeviceProp(const cudaDeviceProp &prop)
 {
     printf("Device Name : %s\n", prop.name);
     printf("totalGlobalMem : %ld\n", prop.totalGlobalMem);
@@ -70,12 +72,53 @@ void printDeviceProp(const cudaDeviceProp &prop)
     printf("pciDeviceID : %d\n", prop.pciDeviceID);
     printf("pciDomainID : %d\n", prop.pciDomainID);
     printf("computeMode  : %d\n", prop.computeMode);   
-}
+}*/
+//CUDA 初始化
+/*bool InitCUDA()
+{
+    int count;
+
+    //取得支持Cuda的装置的数目
+    cudaGetDeviceCount(&count);
+
+    //没有符合的硬件
+    if (count == 0) {
+        fprintf(stderr, "There is no device.\n");
+        return false;
+    }
+
+    int i;
+
+    for (i = 0; i < count; i++) {
+        cudaDeviceProp prop;
+        if (cudaGetDeviceProperties(&prop, i) == cudaSuccess) {
+            if (prop.major >= 1) {
+                break;
+            }
+        }
+    }
+
+    if (i == count) {
+        fprintf(stderr, "There is no device supporting CUDA 1.x.\n");
+        return false;
+    }
+
+    cudaSetDevice(1);
+    printf("We choose Device %d for test :\n",i);
+
+    return true;
+}*/
 
 int main(int argc, char* argv[])
 {
 
+        /*if (!InitCUDA()) 
+    { 
+        return 0; 
+    }
 
+        printf("CUDA initialized.\n");*/
+ 
 	int p;
         srand( 0 );
 	printf("(II) LDPC DECODER - Flooding scheduled decoder\n");
@@ -101,7 +144,7 @@ int main(int argc, char* argv[])
 	bool QPSK_CHANNEL         = false;
         bool Es_N0                = false;
 	bool BER_SIMULATION_LIMIT = false;
-	int  codewords            = 1000;//1000000000
+	int  codewords            = 10000;//1000000000
 
 
 
@@ -155,8 +198,10 @@ if (numDevices > 0) {
 cudaThreadSynchronize();
 }  */
          cudaSetDevice(1);
-         cudaDeviceSynchronize();
-         cudaThreadSynchronize();
+        
+
+        // cudaDeviceSynchronize();
+        cudaThreadSynchronize();
 
  
 
@@ -234,7 +279,7 @@ cudaThreadSynchronize();
 	CTimer simu_timer(true);
 	CTrame simu_data_1(NOEUD, PARITE, NB_FRAMES_IN_PARALLEL);
 
-        ADMM_GPU_decoder_64b decoder_1( NB_FRAMES_IN_PARALLEL );
+         ADMM_GPU_decoder_64b decoder_1( NB_FRAMES_IN_PARALLEL );
 	//ADMM_GPU_Decoder decoder_1( NB_FRAMES_IN_PARALLEL );
 	//ADMM_GPU_16b decoder_1( NB_FRAMES_IN_PARALLEL );
 

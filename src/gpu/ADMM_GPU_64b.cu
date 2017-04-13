@@ -333,14 +333,14 @@ __global__ void ADMM_VN_kernel_deg3(
         #pragma unroll 3
         for(int k = 0; k < degVn; k++)
         {
-//        	const int pos = 3 * i + k;
+        	const int pos = 3 * i + k;
         	const int off = tab[k];//t_row[ pos ];
 #ifdef FLOAT2
         	const float2* ptr = reinterpret_cast<float2*>(LZr);
-        	const float2 data = ptr[ (7920 * num_trame) + off ];
-            temp       += (data.y + data.x);
+         	const float2 data = ptr[ (7920 * num_trame) + off ];
+                temp       += (data.y + data.x);
 #else
-            temp       += ( zReplica[ off ] + Lambda[ off ] );
+                temp       += ( zReplica[ off ] + Lambda[ off ] );
 #endif
         }
         const double xx       = (temp  -  _amu_) * factor;
