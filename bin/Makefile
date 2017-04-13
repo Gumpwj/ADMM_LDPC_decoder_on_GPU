@@ -1,6 +1,6 @@
-CC=nvcc -g -G
-CFLAGS=-O3 -maxrregcount 32  --compile --use_fast_math -std=c++11 -gencode arch=compute_30,code=sm_30
-LDFLAGS=--cudart static -std=c++11 --relocatable-device-code=false -gencode arch=compute_30,code=sm_30 -lcurand
+CC=nvcc -g -G 
+CFLAGS=-O3 -maxrregcount 32  --compile --use_fast_math -std=c++11 -gencode arch=compute_30,code=sm_30 -gencode arch=compute_35,code=sm_35 -gencode arch=compute_37,code=sm_37 -gencode arch=compute_50,code=sm_50 -gencode arch=compute_52,code=sm_52 -gencode arch=compute_60,code=sm_60 -gencode arch=compute_60,code=compute_60 -gencode arch=compute_61,code=compute_61
+LDFLAGS=--cudart static -std=c++11 --relocatable-device-code=false -gencode arch=compute_30,code=sm_30 -gencode arch=compute_30,code=sm_30 -gencode arch=compute_35,code=sm_35 -gencode arch=compute_37,code=sm_37 -gencode arch=compute_50,code=sm_50 -gencode arch=compute_52,code=sm_52 -gencode arch=compute_60,code=sm_60 -gencode arch=compute_60,code=compute_60 -gencode arch=compute_61,code=compute_61 -lcurand
 
 EXEC=main
 
