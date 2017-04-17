@@ -22,8 +22,8 @@ using namespace std;
 //#include "./ldpc/CFloodingGpuDecoder.h"
 //#include "./ldpc/ADMM_GPU_Decoder.h"
 //#include "./ldpc/ADMM_GPU_Decoder_16b.h"
-//#include "./ldpc/ADMM_GPU_decoder_64b.h"
-#include "./ldpc/ADMM_GPU_16b.h"
+#include "./ldpc/ADMM_GPU_decoder_64b.h"
+//#include "./ldpc/ADMM_GPU_16b.h"
 
 #define pi  3.1415926536
 
@@ -279,9 +279,9 @@ cudaThreadSynchronize();
 	CTimer simu_timer(true);
 	CTrame simu_data_1(NOEUD, PARITE, NB_FRAMES_IN_PARALLEL);
 
-        // ADMM_GPU_decoder_64b decoder_1( NB_FRAMES_IN_PARALLEL );
+       ADMM_GPU_decoder_64b decoder_1( NB_FRAMES_IN_PARALLEL );
 	//ADMM_GPU_Decoder decoder_1( NB_FRAMES_IN_PARALLEL );
-	ADMM_GPU_16b decoder_1( NB_FRAMES_IN_PARALLEL );
+	//ADMM_GPU_16b decoder_1( NB_FRAMES_IN_PARALLEL );
 
 	double Eb_N0 = snr_min;
 

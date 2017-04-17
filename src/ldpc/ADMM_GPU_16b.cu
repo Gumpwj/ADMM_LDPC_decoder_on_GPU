@@ -191,7 +191,7 @@ void ADMM_GPU_16b::decode(float* llrs, int* bits, int nb_iters)
     #endif
 
     // LANCEMENT DU PROCESSUS DE DECODAGE SUR n ITERATIONS
-    for(int k = 0; k < 600; k++)
+    for(int k = 0; k < 200; k++)
     {
     	//ADMM_VN_kernel_deg3_16b_mod<<<blocksPerGridNode,  threadsPerBlock>>>
         

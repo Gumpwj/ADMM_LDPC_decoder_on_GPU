@@ -49,7 +49,7 @@ __global__ void ADMM_HardDecision(
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 __shared__ int sdata[256*6]; // > 512
 
-__global__ void reduce(int *g_idata, unsigned int n)
+__global__ void reduce64(int *g_idata, unsigned int n)
 {
     // perform first level of reduction,
     // reading from global memory, writing to shared memory

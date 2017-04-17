@@ -11,7 +11,7 @@
 
 #include "ADMM_GPU_decoder_64b.h"
 
-#include "../gpu/ADMM_shared_64b.h"
+#include "../share/ADMM_shared_64b.h"
 #include "../gpu/ADMM_GPU_64b.h"
 
 #if 0
@@ -150,7 +150,7 @@ void ADMM_GPU_decoder_64b::decode(float* llrs, int* bits, int nb_iters)
             	sum += h_hDecision[p];
             }
             if( sum == 0 ) break;*/
-                   reduce<<<blocksPerGridCheck, threadsPerBlock>>>(d_hDecision, CNs_per_load);
+                   reduce64<<<blocksPerGridCheck, threadsPerBlock>>>(d_hDecision, CNs_per_load);
     #ifdef CHECK_ERRORS
             ERROR_CHECK(cudaGetLastError( ), __FILE__, __LINE__);
     #endif

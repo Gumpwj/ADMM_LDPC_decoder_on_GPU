@@ -30,6 +30,6 @@ extern  __global__ void ADMM_HardDecision(
 				int   *HardDecision,
 			int N);
 
-extern __global__ void reduce(int *g_idata, unsigned int n);
+extern __global__ void reduce64(int *g_idata, unsigned int n);
 
 #endif /* GPU_FUNCTIONS_H_ */
