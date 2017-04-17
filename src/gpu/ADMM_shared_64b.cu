@@ -18,6 +18,7 @@
  */
 
 #include <stdio.h>
+#include <device_functions.h>
 //#include <cuda_fp16.h>
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -41,12 +42,12 @@ __global__ void ADMM_HardDecision(
     int i = blockDim.x * blockIdx.x + threadIdx.x;
     if (i < N)
     {
-        HardDecision[i] = floorf(OutputFromDecoder[i] + 0.50f);
+        HardDecision[i] = floor(OutputFromDecoder[i] + 0.50f);
     }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-__shared__ int sdata[128*6]; // > 512
+__shared__ int sdata[256*6]; // > 512
 
 __global__ void reduce(int *g_idata, unsigned int n)
 {

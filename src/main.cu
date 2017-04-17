@@ -22,8 +22,8 @@ using namespace std;
 //#include "./ldpc/CFloodingGpuDecoder.h"
 //#include "./ldpc/ADMM_GPU_Decoder.h"
 //#include "./ldpc/ADMM_GPU_Decoder_16b.h"
-#include "./ldpc/ADMM_GPU_decoder_64b.h"
-//#include "./ldpc/ADMM_GPU_16b.h"
+//#include "./ldpc/ADMM_GPU_decoder_64b.h"
+#include "./ldpc/ADMM_GPU_16b.h"
 
 #define pi  3.1415926536
 
@@ -144,7 +144,7 @@ int main(int argc, char* argv[])
 	bool QPSK_CHANNEL         = false;
         bool Es_N0                = false;
 	bool BER_SIMULATION_LIMIT = false;
-	int  codewords            = 10000;//1000000000
+	int  codewords            = 1000000;//1000000000
 
 
 
@@ -197,11 +197,11 @@ if (numDevices > 0) {
 //cudaDeviceSynchronize();
 cudaThreadSynchronize();
 }  */
-         cudaSetDevice(1);
+         cudaSetDevice(0);
         
 
         // cudaDeviceSynchronize();
-        cudaThreadSynchronize();
+       // cudaThreadSynchronize();
 
  
 
@@ -279,9 +279,9 @@ cudaThreadSynchronize();
 	CTimer simu_timer(true);
 	CTrame simu_data_1(NOEUD, PARITE, NB_FRAMES_IN_PARALLEL);
 
-         ADMM_GPU_decoder_64b decoder_1( NB_FRAMES_IN_PARALLEL );
+        // ADMM_GPU_decoder_64b decoder_1( NB_FRAMES_IN_PARALLEL );
 	//ADMM_GPU_Decoder decoder_1( NB_FRAMES_IN_PARALLEL );
-	//ADMM_GPU_16b decoder_1( NB_FRAMES_IN_PARALLEL );
+	ADMM_GPU_16b decoder_1( NB_FRAMES_IN_PARALLEL );
 
 	double Eb_N0 = snr_min;
 

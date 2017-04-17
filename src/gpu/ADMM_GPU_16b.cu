@@ -349,11 +349,11 @@ __global__ void ADMM_InitArrays_32b(float* LZr, int N)
 
 __global__ void ADMM_InitArrays_16b(float* LZr, int N)
 {
-    //const int i = blockDim.x * blockIdx.x + threadIdx.x;
-    const int   idx      = blockDim.x * blockIdx.x + threadIdx.x;
-    const int   idy      = blockDim.y * blockIdx.y + threadIdx.y;
-    const int   i        = idy * N + idx;
-    if ((idx < N) && (idy < N))
+    const int i = blockDim.x * blockIdx.x + threadIdx.x;
+    //const int   idx      = blockDim.x * blockIdx.x + threadIdx.x;
+    //const int   idy      = blockDim.y * blockIdx.y + threadIdx.y;
+   // const int   i        = idy * N + idx;
+    if (i < N)
     {
     	__half   t1  = __float2half  ( 0.00f  ); // Lambda
     	__half   t2  = __float2half  ( 0.50f  ); // zReplica
@@ -370,9 +370,9 @@ __global__ void ADMM_InitArrays_16b(float* LZr, int N)
 __global__ void ADMM_VN_kernel_deg3_16b(
 	const float* _LogLikelihoodRatio, float* OutputFromDecoder, float* LZr, const unsigned int *t_row, int N)
 {
-    const int   idx      = blockDim.x * blockIdx.x + threadIdx.x;
-    const int   idy      = blockDim.y * blockIdx.y + threadIdx.y;
-    const int   i        = idy * N + idx;
+    const int   i      = blockDim.x * blockIdx.x + threadIdx.x;
+   // const int   idy      = blockDim.y * blockIdx.y + threadIdx.y;
+   // const int   i        = idy * N + idx;
     const float degree   = 1000;
     const float temp_threshold = degree / 2.0f;
 	const float mu       = 5.5f;//3.0f
@@ -385,7 +385,7 @@ __global__ void ADMM_VN_kernel_deg3_16b(
    // const float* ptr  = reinterpret_cast<float*>(LZr);//float
     float xx;
 
-    if ((idx < N) && (idy < N)){
+    if (i < N){
         float temp                  = -_LogLikelihoodRatio[i];
         const int frame_offset      = (i%2640);
         const int num_trame         = (i/2640);
@@ -507,9 +507,9 @@ __device__ void proj_deg6_v2(float llr[], float v_clip[])
 __global__ void ADMM_CN_kernel_deg6_16b(
 	const float *OutputFromDecoder, float *Lzr, const unsigned int *t_col1, int *cn_synrome, int N)
 {
-    const int idx = blockDim.x * blockIdx.x + threadIdx.x; // NUMERO DU CHECK NODE A CALCULER
-    const int idy = blockDim.y * blockIdx.y + threadIdx.y; // NUMERO DU CHECK NODE A CALCULER
-    const int i   = idy * N + idx;
+    const int i = blockDim.x * blockIdx.x + threadIdx.x; // NUMERO DU CHECK NODE A CALCULER
+   // const int idy = blockDim.y * blockIdx.y + threadIdx.y; // NUMERO DU CHECK NODE A CALCULER
+   // const int i   = idy * N + idx;
     const float rho      = 1.9f;
     const float un_m_rho = 1.0f - rho;
     const int   degCn    = 6;
@@ -518,7 +518,7 @@ __global__ void ADMM_CN_kernel_deg6_16b(
      __half2* ptr = reinterpret_cast<__half2*>(Lzr);
     float*   PTR = reinterpret_cast<float*>(sdata);
 
-    if ((idx < N) && (idy < N)){
+    if (i < N){
     const int frame_id     = i/1320;
     const int frame_offset = i%1320;
     const int trame_start  = 2640 * (i/1320);

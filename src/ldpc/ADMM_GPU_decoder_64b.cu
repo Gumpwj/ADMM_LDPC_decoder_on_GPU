@@ -110,7 +110,7 @@ void ADMM_GPU_decoder_64b::decode(float* llrs, int* bits, int nb_iters)
     cudaError_t Status;
 
 
-    int threadsPerBlock     = 32;
+    int threadsPerBlock     = 128;
     int blocksPerGridNode   = (VNs_per_load  + threadsPerBlock - 1) / threadsPerBlock;
     int blocksPerGridCheck  = (CNs_per_load  + threadsPerBlock - 1) / threadsPerBlock;
     int blocksPerGridMsgs   = (MSGs_per_load + threadsPerBlock - 1) / threadsPerBlock;
@@ -137,7 +137,7 @@ void ADMM_GPU_decoder_64b::decode(float* llrs, int* bits, int nb_iters)
         ERROR_CHECK(cudaGetLastError( ), __FILE__, __LINE__);
 
         // GESTION DU CRITERE D'ARRET DES CODEWORDS
-        if( ( k >= 10 ) && ( (k%2) == 0) )
+        if((k%5) == 0 )
         {
             /*reduce<<<blocksPerGridCheck, threadsPerBlock>>>(d_hDecision, CNs_per_load);
             ERROR_CHECK(cudaGetLastError( ), __FILE__, __LINE__);

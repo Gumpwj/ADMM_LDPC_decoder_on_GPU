@@ -19,6 +19,7 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <builtin_types.h>
+#include <device_functions.h>
 
 using namespace std;
 
