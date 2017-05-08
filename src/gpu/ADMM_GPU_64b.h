@@ -20,6 +20,7 @@
 #include <cuda_runtime.h>
 #include <builtin_types.h>
 
+
 using namespace std;
 
 extern __global__ void ADMM_InitArrays_64b(double *LZr,  int N);

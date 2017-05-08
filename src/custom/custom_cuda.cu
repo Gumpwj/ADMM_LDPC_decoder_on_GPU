@@ -21,7 +21,7 @@ void CUDA_MALLOC_HOST(float** ptr, int nbElements){
     int nbytes = nbElements * sizeof(float);
     Status     = cudaMallocHost(ptr, nbytes);
 #if DEBUG == 1
-	printf("(II)    + Allocating   Host Memory, %d elements (%d bytes) adr [0x%8.8X, 0x%8.8X]\n", nbElements, nbytes, *ptr, *ptr+nbElements-1);
+	//printf("(II)    + Allocating   Host Memory, %d elements (%d bytes) adr [0x%8.8X, 0x%8.8X]\n", nbElements, nbytes, *ptr, *ptr+nbElements-1);
 #endif
     ERROR_CHECK(Status, __FILE__, __LINE__);
 }
@@ -31,7 +31,7 @@ void CUDA_MALLOC_HOST(double** ptr, int nbElements){
     int nbytes = nbElements * sizeof(double);
     Status     = cudaMallocHost(ptr, nbytes);
 #if DEBUG == 1
-	printf("(II)    + Allocating   Host Memory, %d elements (%d bytes) adr [0x%8.8X, 0x%8.8X]\n", nbElements, nbytes, *ptr, *ptr+nbElements-1);
+	//printf("(II)    + Allocating   Host Memory, %d elements (%d bytes) adr [0x%8.8X, 0x%8.8X]\n", nbElements, nbytes, *ptr, *ptr+nbElements-1);
 #endif
     ERROR_CHECK(Status, __FILE__, __LINE__);
 }
@@ -41,7 +41,7 @@ void CUDA_MALLOC_HOST(int** ptr, int nbElements){
     int nbytes = nbElements * sizeof(int);
     Status     = cudaMallocHost(ptr, nbytes);
 #if DEBUG == 1
-	printf("(II)    + Allocating   Host Memory, %d elements (%d bytes) adr [0x%8.8X, 0x%8.8X]\n", nbElements, nbytes, *ptr, *ptr+nbElements-1);
+	//printf("(II)    + Allocating   Host Memory, %d elements (%d bytes) adr [0x%8.8X, 0x%8.8X]\n", nbElements, nbytes, *ptr, *ptr+nbElements-1);
 #endif
     ERROR_CHECK(Status, __FILE__, __LINE__);
 }
@@ -51,7 +51,7 @@ void CUDA_MALLOC_HOST(unsigned int** ptr, int nbElements){
     int nbytes = nbElements * sizeof(unsigned int);
     Status     = cudaMallocHost(ptr, nbytes);
 #if DEBUG == 1
-	printf("(II)    + Allocating   Host Memory, %d elements (%d bytes) adr [0x%8.8X, 0x%8.8X]\n", nbElements, nbytes, *ptr, *ptr+nbElements-1);
+	//printf("(II)    + Allocating   Host Memory, %d elements (%d bytes) adr [0x%8.8X, 0x%8.8X]\n", nbElements, nbytes, *ptr, *ptr+nbElements-1);
 #endif
     ERROR_CHECK(Status, __FILE__, __LINE__);
 }
@@ -61,7 +61,7 @@ void CUDA_MALLOC_HOST(char** ptr, int nbElements){
     int nbytes = nbElements * sizeof(char);
     Status     = cudaMallocHost(ptr, nbytes);
 #if DEBUG == 1
-	printf("(II)    + Allocating   Host Memory, %d elements (%d bytes) adr [0x%8.8X, 0x%8.8X]\n", nbElements, nbytes, *ptr, *ptr+nbElements-1);
+	//printf("(II)    + Allocating   Host Memory, %d elements (%d bytes) adr [0x%8.8X, 0x%8.8X]\n", nbElements, nbytes, *ptr, *ptr+nbElements-1);
 #endif
     ERROR_CHECK(Status, __FILE__, __LINE__);
 }
@@ -71,7 +71,7 @@ void CUDA_MALLOC_DEVICE(float** ptr, int nbElements){
     int nbytes = nbElements * sizeof(float);
     Status     = cudaMalloc(ptr, nbytes);
 #if DEBUG == 1
-	printf("(II)    + Allocating Device Memory, %d elements (%d bytes) adr [0x%8.8X, 0x%8.8X]\n", nbElements, nbytes, *ptr, *ptr+nbElements-1);
+	//printf("(II)    + Allocating Device Memory, %d elements (%d bytes) adr [0x%8.8X, 0x%8.8X]\n", nbElements, nbytes, *ptr, *ptr+nbElements-1);
 #endif
     ERROR_CHECK(Status, __FILE__, __LINE__);
 }
@@ -81,7 +81,7 @@ void CUDA_MALLOC_DEVICE(double** ptr, int nbElements){
     int nbytes = nbElements * sizeof(double);
     Status     = cudaMalloc(ptr, nbytes);
 #if DEBUG == 1
-	printf("(II)    + Allocating Device Memory, %d elements (%d bytes) adr [0x%8.8X, 0x%8.8X]\n", nbElements, nbytes, *ptr, *ptr+nbElements-1);
+	//printf("(II)    + Allocating Device Memory, %d elements (%d bytes) adr [0x%8.8X, 0x%8.8X]\n", nbElements, nbytes, *ptr, *ptr+nbElements-1);
 #endif
     ERROR_CHECK(Status, __FILE__, __LINE__);
 }
@@ -91,7 +91,7 @@ void CUDA_MALLOC_DEVICE(int** ptr, int nbElements){
     int nbytes = nbElements * sizeof(int);
     Status     = cudaMalloc(ptr, nbytes);
 #if DEBUG == 1
-	printf("(II)    + Allocating Device Memory, %d elements (%d bytes) adr [0x%8.8X, 0x%8.8X]\n", nbElements, nbytes, *ptr, *ptr+nbElements-1);
+	//printf("(II)    + Allocating Device Memory, %d elements (%d bytes) adr [0x%8.8X, 0x%8.8X]\n", nbElements, nbytes, *ptr, *ptr+nbElements-1);
 #endif
     ERROR_CHECK(Status, __FILE__, __LINE__);
 }
@@ -101,7 +101,7 @@ void CUDA_MALLOC_DEVICE(unsigned int** ptr, int nbElements){
     int nbytes = nbElements * sizeof(unsigned int);
     Status     = cudaMalloc(ptr, nbytes);
 #if DEBUG == 1
-	printf("(II)    + Allocating Device Memory, %d elements (%d bytes) adr [0x%8.8X, 0x%8.8X]\n", nbElements, nbytes, *ptr, *ptr+nbElements-1);
+	//printf("(II)    + Allocating Device Memory, %d elements (%d bytes) adr [0x%8.8X, 0x%8.8X]\n", nbElements, nbytes, *ptr, *ptr+nbElements-1);
 #endif
     ERROR_CHECK(Status, __FILE__, __LINE__);
 }
@@ -111,7 +111,7 @@ void CUDA_MALLOC_DEVICE(char** ptr, int nbElements){
     int nbytes = nbElements * sizeof(char);
     Status     = cudaMalloc(ptr, nbytes);
 #if DEBUG == 1
-	printf("(II)    + Allocating Device Memory, %d elements (%d bytes) adr [0x%8.8X, 0x%8.8X]\n", nbElements, nbytes, *ptr, *ptr+nbElements-1);
+	//printf("(II)    + Allocating Device Memory, %d elements (%d bytes) adr [0x%8.8X, 0x%8.8X]\n", nbElements, nbytes, *ptr, *ptr+nbElements-1);
 #endif
     ERROR_CHECK(Status, __FILE__, __LINE__);
 }

@@ -108,13 +108,18 @@ ADMM_GPU_Decoder::~ADMM_GPU_Decoder()
 void ADMM_GPU_Decoder::decode(float* llrs, int* bits, int nb_iters)
 {
     cudaError_t Status;
-
-//	for(int k=1; k<frames; k++){
-//	    for(int i=0; i<VNs_per_frame; i++){
-//	    	llrs[VNs_per_frame * k + i] = llrs[i];
-//	    }
-//	}
-
+   
+   /* for(int m = 0; m < 100; m++){
+        printf("llr[%d]  %f\n", m, llrs[m]);
+    };*/
+       
+	/*for(int k=1; k<frames+1; k++){
+	    for(int i=0; i<VNs_per_frame; i++){
+	    	llrs[VNs_per_frame * k + i] = llrs[i];
+                printf(",%f\n", llrs[VNs_per_frame * k + i] );
+	    }
+	}*/
+     
 /*
     VNs_per_frame  = NOEUD;
     CNs_per_frame  = PARITE;
@@ -130,7 +135,7 @@ void ADMM_GPU_Decoder::decode(float* llrs, int* bits, int nb_iters)
 
     /* On copie les donnees d'entree du decodeur */
     cudaMemcpyAsync(d_iLLR, llrs, VNs_per_load * sizeof(float), cudaMemcpyHostToDevice);
-
+     // cudaMemcpyAsync(d_iLLR, data_1, VNs_per_load * sizeof(float), cudaMemcpyHostToDevice);
     /* INITIALISATION DU DECODEUR LDPC SUR GPU */
     ADMM_InitArrays_32b<<<blocksPerGridMsgs, threadsPerBlock>>>(LZr, MSGs_per_load);
     ERROR_CHECK(cudaGetLastError( ), __FILE__, __LINE__);
@@ -143,6 +148,20 @@ void ADMM_GPU_Decoder::decode(float* llrs, int* bits, int nb_iters)
     {
     	ADMM_VN_kernel_deg3<<<blocksPerGridNode,  threadsPerBlock>>>
     			(d_iLLR, d_oLLR, LZr, d_t_row, VNs_per_load);
+//print d_iLLR
+
+        Status = cudaMemcpy(h_iLLR, d_oLLR, VNs_per_load * sizeof(float), cudaMemcpyDeviceToHost);
+        ERROR_CHECK(Status, __FILE__, __LINE__);
+        FILE* f1 = fopen("h_iLLR_32.json", "w");
+        for(int m=1; m<frames+1; m++){
+	    for(int i=0; i<VNs_per_frame; i++){
+                //int off = VNs_per_frame * k;
+                 fprintf(f1, "frames %d   iter %d   bit %4d   value %4f\n", m, k, i, h_iLLR[i]);
+	    }
+       }
+        fclose( f1 );
+//
+
         ERROR_CHECK(cudaGetLastError( ), __FILE__, __LINE__);
 
         ADMM_CN_kernel_deg6<<<blocksPerGridCheck, threadsPerBlock>>>
@@ -176,11 +195,28 @@ void ADMM_GPU_Decoder::decode(float* llrs, int* bits, int nb_iters)
     Status = cudaMemcpy(bits, d_hDecision, VNs_per_load * sizeof(int), cudaMemcpyDeviceToHost);
     ERROR_CHECK(Status, __FILE__, __LINE__);
 
-//	for (int i=0; i<VNs_per_load; i++){
-//		bits[i] = h_hDecision[i];
-//	}
-/*
-	for(int k=1; k<frames; k++){
+   //FILE* f2 = fopen("bits.txt", "r");
+ 
+/*  for(int m = 0; m < 100; m++){
+    printf ("bit[%d]: %d", m, bits[m]);
+   
+   };
+*/
+   // fclose( f2 );
+
+
+	/*for (int i=0; i<VNs_per_load; i++){
+		bits[i] = h_hDecision[i];
+	}*/
+      FILE* fp = fopen("bits64.txt", "w");
+      for(int m=1; m<frames+1; m++){
+	    for(int i=0; i<VNs_per_frame; i++){
+                //int off = VNs_per_frame * k;
+                fprintf(fp, "frame %d   bit %4d   value %d\n", m, i, bits[i]);
+	    }
+	}
+      fclose(fp);
+	/*for(int k=1; k<frames+1; k++){
 		bool error = false;
 		for(int i=0; i<VNs_per_frame; i++){
 	    	if( bits[VNs_per_frame * k + i] != bits[i] )
@@ -191,7 +227,7 @@ void ADMM_GPU_Decoder::decode(float* llrs, int* bits, int nb_iters)
 	    	}
 	    }
 		if( error ) exit( 0 );
-	}
-*/
+	}*/
+
 }
 

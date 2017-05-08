@@ -9,7 +9,7 @@
       exit(0);}} while(0)
 
 
-__global__ void vectNoise(const int *IN, const float *A, const float *B, float *C, float SigB, int N)
+__global__ void vectNoise(const int *IN, const float*A, const float *B, float *C, float SigB, int N)
 {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
 
@@ -109,5 +109,15 @@ void CChanelAWGN2::generate( )
     vectNoise<<<blocksPerGrid, threadsPerBlock>>>(d_IN, device_A, device_B, device_R, (float)SigB, _data);
 
     eStatus = cudaMemcpy(t_noise_data, device_R, _data * sizeof(float), cudaMemcpyDeviceToHost);
+        
+        FILE* f1 = fopen("t_noise_data.json", "w");
+        for (int m = 0; m < _data ; m++){
+        fprintf(f1, "\n ");
+        fprintf(f1, "  m = %d         ", m);
+	fprintf(f1, "   %4f ", t_noise_data[m]);
+        fprintf(f1, "\n ");
+        }
+        fclose( f1 );
+
     CUDA_CALL(eStatus);
 }

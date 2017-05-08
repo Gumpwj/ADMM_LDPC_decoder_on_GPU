@@ -120,7 +120,7 @@ __device__ void sort6_rank_order_reg_modif_64b(double illr[ ], double rllr[ ], i
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-__shared__ int sdata[256*6]; // > 512
+__shared__ int sdata[128*12]; // > 512
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -156,7 +156,7 @@ __device__ void projection_deg6_64b(double llr[], double results[])
 	finished = finished | test;
 
     __syncthreads( );
-
+//Twirl
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     double constituent = 0;
@@ -298,15 +298,15 @@ __device__ void projection_deg6_64b(double llr[], double results[])
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#define FLOAT2
+#define DOUBLE2
 
 __global__ void ADMM_InitArrays_64b(double* LZr, int N)
 {
     const int i = blockDim.x * blockIdx.x + threadIdx.x;
     if (i < N)
     {
-    	float2* ptr = reinterpret_cast<float2*>(LZr);
-    	ptr[i]      = make_float2(0.00f, 0.50f);
+    	double2* ptr = reinterpret_cast<double2*>(LZr);
+    	ptr[i]      = make_double2(0.00f, 0.50f);
     }
 }
 
@@ -335,9 +335,9 @@ __global__ void ADMM_VN_kernel_deg3(
         {
         	const int pos = 3 * i + k;
         	const int off = tab[k];//t_row[ pos ];
-#ifdef FLOAT2
-        	const float2* ptr = reinterpret_cast<float2*>(LZr);
-         	const float2 data = ptr[ (7920 * num_trame) + off ];
+#ifdef DOUBLE2
+        	const double2* ptr = reinterpret_cast<double2*>(LZr);
+         	const double2 data = ptr[ (8440 * num_trame) + off ];
                 temp       += (data.y + data.x);
 #else
                 temp       += ( zReplica[ off ] + Lambda[ off ] );
@@ -361,7 +361,7 @@ __global__ void ADMM_CN_kernel_deg6(
 	const double rho      = 1.9f;
 	const double un_m_rho = 1.0f - rho;
 	const int   degCn    = 6;
-    double v_proj[6], ztemp [6];
+        double v_proj[6], ztemp [6];
 
     if (i < N){
         const int frame_offset = i%1320;
@@ -376,9 +376,9 @@ __global__ void ADMM_CN_kernel_deg6(
             const double xpred  = OutputFromDecoder[ trame_start + offset ];
             syndrom           += (xpred > 0.5);
             reinterpret_cast<double*>(sdata)[threadIdx.x + 128 * k] = xpred;
-#ifdef FLOAT2
-        	const float2* ptr = reinterpret_cast<float2*>(LZr);
-        	const float2 data = ptr[ ind ];
+#ifdef DOUBLE2
+        	const double2* ptr = reinterpret_cast<double2*>(LZr);
+        	const double2 data = ptr[ ind ];
             v_proj[k]         = (rho * xpred) + (un_m_rho * data.y) - data.x;
 #else
             v_proj[k]         = (rho * xpred) + (un_m_rho * zReplica[ind]) - Lambda[ind];
@@ -393,11 +393,11 @@ __global__ void ADMM_CN_kernel_deg6(
         {
             const int ind     = degCn * i + k;
             const double xpred = reinterpret_cast<double*>(sdata)[threadIdx.x + 128 * k];
-#ifdef FLOAT2
-            float2* ptr = reinterpret_cast<float2*>(LZr);
-            float2 data = ptr[ ind ];
+#ifdef DOUBLE2
+            double2* ptr = reinterpret_cast<double2*>(LZr);
+            double2 data = ptr[ ind ];
             double x     = data.x + (rho * (ztemp[k] - xpred) + un_m_rho * (ztemp[k] - data.y));
-            ptr[ ind ]  = make_float2(x, ztemp[k]);
+            ptr[ ind ]  = make_double2(x, ztemp[k]);
 #else
             Lambda[ind]    = Lambda[ind] + (rho * (ztemp[k] - xpred) + un_m_rho * (ztemp[k] - zReplica[ind]));
             zReplica[ind]  = ztemp[k];

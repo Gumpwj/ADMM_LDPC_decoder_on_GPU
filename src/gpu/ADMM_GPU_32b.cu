@@ -315,7 +315,8 @@ __global__ void ADMM_InitArrays_32b(float* LZr, int N)
 __global__ void ADMM_VN_kernel_deg3(
 	const float* _LogLikelihoodRatio, float* OutputFromDecoder, float* LZr, const unsigned int *t_row, int N)
 {
-    const int i             = blockDim.x * blockIdx.x + threadIdx.x;
+       
+        const int i             = blockDim.x * blockIdx.x + threadIdx.x;
 	const float mu      = 3.0f;
 	const float  alpha  = 0.8;
 	const float _amu_   = alpha / mu;
@@ -324,6 +325,7 @@ __global__ void ADMM_VN_kernel_deg3(
     const int   degVn       = 3;
 
     if (i < N){
+           
         float temp                  = -_LogLikelihoodRatio[i]; // <= OK
         const int frame_offset      = (i%2640);
         const int num_trame         = (i/2640);
@@ -345,6 +347,12 @@ __global__ void ADMM_VN_kernel_deg3(
         }
         const float xx       = (temp  -  _amu_) * factor;
         OutputFromDecoder[i] = fmaxf(fminf(xx, 1.0f), 0.0f);
+
+       /* float* m_doLLR = new float[i]
+        Status = cudaMemcpy(m_doLLR, OutputFromDecoder, N * sizeof(float), cudaMemcpyDeviceToHost);
+        ERROR_CHECK(Status, __FILE__, __LINE__);
+        delete m_doLLR;*/
+
     }
 }
 

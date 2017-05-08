@@ -105,7 +105,7 @@ ADMM_GPU_decoder_64b::~ADMM_GPU_decoder_64b()
 	Status = cudaFree(LZr);				ERROR_CHECK(Status, (char*)__FILE__, __LINE__);
 }
 
-void ADMM_GPU_decoder_64b::decode(float* llrs, int* bits, int nb_iters)
+void ADMM_GPU_decoder_64b::decode(double* llrs, int* bits, int nb_iters)
 {
     cudaError_t Status;
 
@@ -116,7 +116,8 @@ void ADMM_GPU_decoder_64b::decode(float* llrs, int* bits, int nb_iters)
     int blocksPerGridMsgs   = (MSGs_per_load + threadsPerBlock - 1) / threadsPerBlock;
 
     /* On copie les donnees d'entree du decodeur */
-    cudaMemcpyAsync(d_iLLR, llrs, VNs_per_load * sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpyAsync(d_iLLR, llrs, VNs_per_load * sizeof(double), cudaMemcpyHostToDevice);
+
 
     /* INITIALISATION DU DECODEUR LDPC SUR GPU */
     ADMM_InitArrays_64b<<<blocksPerGridMsgs, threadsPerBlock>>>(LZr, MSGs_per_load);
@@ -130,6 +131,21 @@ void ADMM_GPU_decoder_64b::decode(float* llrs, int* bits, int nb_iters)
     {
     	ADMM_VN_kernel_deg3<<<blocksPerGridNode,  threadsPerBlock>>>
     			(d_iLLR, d_oLLR, LZr, d_t_row, VNs_per_load);
+
+       //print d_iLLR
+
+        Status = cudaMemcpy(h_iLLR, d_oLLR, VNs_per_load * sizeof(double), cudaMemcpyDeviceToHost);
+        ERROR_CHECK(Status, __FILE__, __LINE__);
+        FILE* f1 = fopen("h_iLLR_64.json", "w");
+          for(int m=1; m<frames+1; m++){
+	    for(int i=0; i<VNs_per_frame; i++){
+                //int off = VNs_per_frame * k;
+                 fprintf(f1, "frames %d   iter %d   bit %4d   value %4f\n", m, k, i, h_iLLR[i]);
+	    }
+	}
+        fclose( f1 );
+       //
+
         ERROR_CHECK(cudaGetLastError( ), __FILE__, __LINE__);
 
         ADMM_CN_kernel_deg6<<<blocksPerGridCheck, threadsPerBlock>>>
@@ -139,32 +155,32 @@ void ADMM_GPU_decoder_64b::decode(float* llrs, int* bits, int nb_iters)
         // GESTION DU CRITERE D'ARRET DES CODEWORDS
         if((k%5) == 0 )
         {
-            /*reduce<<<blocksPerGridCheck, threadsPerBlock>>>(d_hDecision, CNs_per_load);
+            reduce64 <<<blocksPerGridCheck, threadsPerBlock>>>(d_hDecision, CNs_per_load);
             ERROR_CHECK(cudaGetLastError( ), __FILE__, __LINE__);
 
             Status = cudaMemcpy(h_hDecision, d_hDecision, blocksPerGridCheck * sizeof(int), cudaMemcpyDeviceToHost);
             ERROR_CHECK(Status, __FILE__, __LINE__);
-
-            int sum = 0;
-            for(int p=0; p<blocksPerGridCheck; p++){
-            	sum += h_hDecision[p];
-            }
-            if( sum == 0 ) break;*/
-                   reduce64<<<blocksPerGridCheck, threadsPerBlock>>>(d_hDecision, CNs_per_load);
-    #ifdef CHECK_ERRORS
-            ERROR_CHECK(cudaGetLastError( ), __FILE__, __LINE__);
-    #endif
-
-            Status = cudaMemcpy(h_hDecision, d_hDecision, blocksPerGridCheck * sizeof(int), cudaMemcpyDeviceToHost);
-    #ifdef CHECK_ERRORS
-            ERROR_CHECK(Status, __FILE__, __LINE__);
-    #endif
 
             int sum = 0;
             for(int p=0; p<blocksPerGridCheck; p++){
             	sum += h_hDecision[p];
             }
             if( sum == 0 ) break;
+                  /* reduce64<<<blocksPerGridCheck, threadsPerBlock>>>(d_hDecision, CNs_per_load);
+    #ifdef CHECK_ERRORS
+            ERROR_CHECK(cudaGetLastError( ), __FILE__, __LINE__);
+    #endif
+
+            Status = cudaMemcpy(h_hDecision, d_hDecision, blocksPerGridCheck * sizeof(int), cudaMemcpyDeviceToHost);
+    #ifdef CHECK_ERRORS
+            ERROR_CHECK(Status, __FILE__, __LINE__);
+    #endif
+
+            int sum = 0;
+            for(int p=0; p<blocksPerGridCheck; p++){
+            	sum += h_hDecision[p];
+            }
+            if( sum == 0 ) break;*/
         }
     }
 
@@ -177,6 +193,15 @@ void ADMM_GPU_decoder_64b::decode(float* llrs, int* bits, int nb_iters)
 //    printf("h_hDecision = %p, d_hDecision = %p, VNs_per_load = %d\n", h_hDecision, d_hDecision, VNs_per_load);
     Status = cudaMemcpy(bits, d_hDecision, VNs_per_load * sizeof(int), cudaMemcpyDeviceToHost);
     ERROR_CHECK(Status, __FILE__, __LINE__);
+
+      FILE* fp = fopen("bits64.txt", "w");
+      for(int m=1; m<frames+1; m++){
+	    for(int i=0; i<VNs_per_frame; i++){
+                //int off = VNs_per_frame * k;
+                fprintf(fp, "frame %d   bit %4d   value %d\n", m, i, bits[i]);
+	    }
+	}
+      fclose(fp);
 
 //	for (int i=0; i<VNs_per_load; i++){
 //		bits[i] = h_hDecision[i];

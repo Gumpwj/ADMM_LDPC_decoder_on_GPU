@@ -9,6 +9,7 @@
 
 /*----------------------------------------------------------------------------*/
 
+
 #include "ADMM_GPU_16b.h"
 
 #include "../gpu/ADMM_GPU_16b.h"
@@ -70,46 +71,46 @@ ADMM_GPU_16b::ADMM_GPU_16b( int _frames )
     delete t_col_m;
 
     unsigned short t_cn_pos[MSGs_per_frame];
-    FILE* f1 = fopen("reorder.txt", "w");
+    //FILE* f1 = fopen("reorder.txt", "w");
     for(int i=0; i<MSGs_per_frame; i++){
     	int x = (i/6)%128;
     	int y = (128*i)%768;
     	int b = 768 * (i/768);
     	t_cn_pos[i] = y + x + b;
 //    	printf("thread %4d : %4d => t_cn_pos[%4d] = %4d (%4d, %4d, %4d)\n", i/6, i, i, t_cn_pos[i], x, y, b);
-		if( (i % 6) == 0 ) fprintf(f1, "\n CN %4d : ", i/6);
-		fprintf(f1, "%4d ", t_cn_pos[i]);
+		//if( (i % 6) == 0 ) fprintf(f1, "\n CN %4d : ", i/6);
+		//fprintf(f1, "%4d ", t_cn_pos[i]);
 //    	if( i == 800 ) exit ( 0 );
     }
-    fclose( f1 );
+    //fclose( f1 );
 
-    FILE* fg = fopen("reorder_gpu.txt", "w");
+   /* FILE* fg = fopen("reorder_gpu.txt", "w");
     for(int i=0; i<1320; i++)
     {
-		fprintf(fg, "\nCN %4d : ", i);
+		//fprintf(fg, "\nCN %4d : ", i);
 		for(int k=0; k<6; k++)
 		{
 		    const int ind = 768 * (i/128) + 128 * k + i%128;
-			fprintf(fg, "%4d ", ind);
+			//fprintf(fg, "%4d ", ind);
 		}
     }
-    fclose( fg );
+    fclose( fg );*/
 
-    FILE* f2 = fopen("reorder_vn.txt", "w");
+   // FILE* f2 = fopen("reorder_vn.txt", "w");
     unsigned short t_row_mod[MSGs_per_frame];
     for(int i=0; i<MSGs_per_frame; i++)
     {
     	int value = t_row[i];
 		t_row_mod[i] = t_cn_pos[value];
-		if( (i % 3) == 0 ){
-			fprintf(f2, "\n VN %4d : ", i/3);
+		/*if( (i % 3) == 0 ){
+			//fprintf(f2, "\n VN %4d : ", i/3);
 			for(int j=0; j<3; j++)
-				fprintf(f2, "%4d ", t_row[i+j]);
-			fprintf(f2, "=> ");
+				//fprintf(f2, "%4d ", t_row[i+j]);
+			//fprintf(f2, "=> ");
 		}
-		fprintf(f2, "%4d ", t_row_mod[i]);
+		//fprintf(f2, "%4d ", t_row_mod[i]);*/
     }
-    fclose( f2 );
+   // fclose( f2 );
 
     unsigned short t_row_ready[4 * MSGs_per_frame / 3];
     unsigned short* in  = t_row_mod;
@@ -123,15 +124,15 @@ ADMM_GPU_16b::ADMM_GPU_16b( int _frames )
     	*out++ = 0;
     }
 
-    FILE* f3 = fopen("reorder_vn_pad.txt", "w");
+    //FILE* f3 = fopen("reorder_vn_pad.txt", "w");
     for(int i=0; i<4*MSGs_per_frame/3; i++)
     {
 		if( (i % 4) == 0 ){
-			fprintf(f3, "\n VN %4d : ", i/4);
+			//fprintf(f3, "\n VN %4d : ", i/4);
 		}
-		fprintf(f3, "%4d ", t_row_ready[i]);
+		//fprintf(f3, "%4d ", t_row_ready[i]);
     }
-    fclose( f3 );
+    //fclose( f3 );
 
     CUDA_MALLOC_DEVICE(&d_t_row, MSGs_per_frame);
 #if 1
@@ -200,6 +201,20 @@ void ADMM_GPU_16b::decode(float* llrs, int* bits, int nb_iters)
     #ifdef CHECK_ERRORS
         ERROR_CHECK(cudaGetLastError( ), __FILE__, __LINE__);
     #endif
+    Status = cudaMemcpy(h_iLLR, d_oLLR, VNs_per_load * sizeof(float), cudaMemcpyDeviceToHost);
+        ERROR_CHECK(Status, __FILE__, __LINE__);
+
+     FILE* f1 = fopen("h_iLLR_16.json", "w");
+          for(int m=1; m<frames+1; m++){
+	    for(int i=0; i<VNs_per_frame; i++){
+                //int off = VNs_per_frame * k;
+                 fprintf(f1, "frames %d   iter %d   bit %4d   value %4f\n", m, k, i, h_iLLR[i]);
+              }
+	    
+	}
+        fclose( f1 );
+
+
 
        // ADMM_CN_kernel_deg6_16b_mod<<<blocksPerGridCheck, threadsPerBlock>>>
        // 		(d_oLLR, LZr, d_t_col, d_hDecision, CNs_per_load);
@@ -242,5 +257,14 @@ void ADMM_GPU_16b::decode(float* llrs, int* bits, int nb_iters)
    #ifdef CHECK_ERRORS
     ERROR_CHECK(Status, __FILE__, __LINE__);
    #endif
+
+     FILE* fp = fopen("bits64.txt", "w");
+      for(int m=1; m<frames+1; m++){
+	    for(int i=0; i<VNs_per_frame; i++){
+                //int off = VNs_per_frame * k;
+                fprintf(fp, "frame %d   bit %4d   value %d\n", m, i, bits[i]);
+	    }
+	}
+      fclose(fp);
 }
 
