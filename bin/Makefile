@@ -8,12 +8,9 @@ SRC= \
  ../src/ldpc/ADMM_GPU_16b.cu \
  ../src/ldpc/ADMM_GPU_Decoder.cu \
  ../src/ldpc/ADMM_GPU_decoder_16b.cu \
- ../src/ldpc/ADMM_GPU_decoder_64b.cu \
  ../src/gpu/ADMM_GPU_16b.cu \
  ../src/gpu/ADMM_GPU_32b.cu \
- ../src/gpu/ADMM_GPU_64b.cu \
  ../src/gpu/ADMM_shared.cu \
- ../src/share/ADMM_shared_64b.cu \
  ../src/custom/custom_cuda.cu \
  ../src/cpp_src/CTrame/CTrame.cu \
  ../src/cpp_src/CTerminal/CTerminal.cu \
