@@ -105,7 +105,7 @@ ADMM_GPU_Decoder::~ADMM_GPU_Decoder()
 	Status = cudaFree(LZr);				ERROR_CHECK(Status, (char*)__FILE__, __LINE__);
 }
 
-void ADMM_GPU_Decoder::decode(float* llrs, int* bits, int nb_iters)
+void ADMM_GPU_Decoder::decode(float* llrs, int* bits, int nb_iters, float _alpha, float _mu, float _rho)
 {
     cudaError_t Status;
    
@@ -128,7 +128,12 @@ void ADMM_GPU_Decoder::decode(float* llrs, int* bits, int nb_iters)
     CNs_per_load   = frames *  CNs_per_frame;
     MSGs_per_load  = frames * MSGs_per_frame;
 */
-	int threadsPerBlock     = 128;
+
+    const float mu      = _mu;
+    const float alpha   = _alpha;
+    const float rho     = _rho;
+
+    int threadsPerBlock     = 128;
     int blocksPerGridNode   = (VNs_per_load  + threadsPerBlock - 1) / threadsPerBlock;
     int blocksPerGridCheck  = (CNs_per_load  + threadsPerBlock - 1) / threadsPerBlock;
     int blocksPerGridMsgs   = (MSGs_per_load + threadsPerBlock - 1) / threadsPerBlock;
@@ -147,25 +152,25 @@ void ADMM_GPU_Decoder::decode(float* llrs, int* bits, int nb_iters)
     for(int k = 0; k < 200; k++)
     {
     	ADMM_VN_kernel_deg3<<<blocksPerGridNode,  threadsPerBlock>>>
-    			(d_iLLR, d_oLLR, LZr, d_t_row, VNs_per_load);
+    			(d_iLLR, d_oLLR, LZr, d_t_row, VNs_per_load, alpha, mu);
 //print d_iLLR
 
-        Status = cudaMemcpy(h_iLLR, d_oLLR, VNs_per_load * sizeof(float), cudaMemcpyDeviceToHost);
+       Status = cudaMemcpy(h_iLLR, d_oLLR, VNs_per_load * sizeof(float), cudaMemcpyDeviceToHost);
         ERROR_CHECK(Status, __FILE__, __LINE__);
-        FILE* f1 = fopen("h_iLLR_32.json", "w");
+        /*FILE* f1 = fopen("h_iLLR_32.json", "w");
         for(int m=1; m<frames+1; m++){
 	    for(int i=0; i<VNs_per_frame; i++){
                 //int off = VNs_per_frame * k;
                  fprintf(f1, "frames %d   iter %d   bit %4d   value %4f\n", m, k, i, h_iLLR[i]);
 	    }
        }
-        fclose( f1 );
+        fclose( f1 );*/
 //
 
         ERROR_CHECK(cudaGetLastError( ), __FILE__, __LINE__);
 
         ADMM_CN_kernel_deg6<<<blocksPerGridCheck, threadsPerBlock>>>
-        		(d_oLLR, LZr, d_t_col, d_hDecision, CNs_per_load);
+        		(d_oLLR, LZr, d_t_col, d_hDecision, CNs_per_load, rho);
         ERROR_CHECK(cudaGetLastError( ), __FILE__, __LINE__);
 
         // GESTION DU CRITERE D'ARRET DES CODEWORDS
@@ -208,14 +213,21 @@ void ADMM_GPU_Decoder::decode(float* llrs, int* bits, int nb_iters)
 	/*for (int i=0; i<VNs_per_load; i++){
 		bits[i] = h_hDecision[i];
 	}*/
-      FILE* fp = fopen("bits64.txt", "w");
+
+
+//
+
+     /* FILE* fp = fopen("bits64.txt", "w");
       for(int m=1; m<frames+1; m++){
 	    for(int i=0; i<VNs_per_frame; i++){
                 //int off = VNs_per_frame * k;
                 fprintf(fp, "frame %d   bit %4d   value %d\n", m, i, bits[i]);
 	    }
 	}
-      fclose(fp);
+      fclose(fp);*/
+
+
+
 	/*for(int k=1; k<frames+1; k++){
 		bool error = false;
 		for(int i=0; i<VNs_per_frame; i++){

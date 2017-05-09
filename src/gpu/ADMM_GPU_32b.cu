@@ -313,12 +313,12 @@ __global__ void ADMM_InitArrays_32b(float* LZr, int N)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 __global__ void ADMM_VN_kernel_deg3(
-	const float* _LogLikelihoodRatio, float* OutputFromDecoder, float* LZr, const unsigned int *t_row, int N)
+	const float* _LogLikelihoodRatio, float* OutputFromDecoder, float* LZr, const unsigned int *t_row, int N, float _alpha, float _mu)
 {
        
         const int i             = blockDim.x * blockIdx.x + threadIdx.x;
-	const float mu      = 3.0f;
-	const float  alpha  = 0.8;
+	const float  mu     = _mu;
+	const float alpha   = _alpha;
 	const float _amu_   = alpha / mu;
 	const float _2_amu_ = _amu_+ _amu_;
     const float factor  = 1.0f / (3.0f - _2_amu_);
@@ -363,10 +363,10 @@ __global__ void ADMM_VN_kernel_deg3(
 
 
 __global__ void ADMM_CN_kernel_deg6(
-	const float *OutputFromDecoder, float *LZr, const unsigned int *t_col1, int *cn_synrome, int N)
+	const float *OutputFromDecoder, float *LZr, const unsigned int *t_col1, int *cn_synrome, int N, float _rho)
 {
     const int i = blockDim.x * blockIdx.x + threadIdx.x; // NUMERO DU CHECK NODE A CALCULER
-	const float rho      = 1.9f;
+	const float rho      = _rho;//1.9f
 	const float un_m_rho = 1.0f - rho;
 	const int   degCn    = 6;
     float v_proj[6], ztemp [6];

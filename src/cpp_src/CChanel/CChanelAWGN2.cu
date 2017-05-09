@@ -110,14 +110,14 @@ void CChanelAWGN2::generate( )
 
     eStatus = cudaMemcpy(t_noise_data, device_R, _data * sizeof(float), cudaMemcpyDeviceToHost);
         
-        FILE* f1 = fopen("t_noise_data.json", "w");
+       /* FILE* f1 = fopen("t_noise_data.json", "w");
         for (int m = 0; m < _data ; m++){
         fprintf(f1, "\n ");
         fprintf(f1, "  m = %d         ", m);
 	fprintf(f1, "   %4f ", t_noise_data[m]);
         fprintf(f1, "\n ");
         }
-        fclose( f1 );
+        fclose( f1 );*/
 
     CUDA_CALL(eStatus);
 }
