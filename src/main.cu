@@ -20,10 +20,10 @@
 using namespace std;
 
 //#include "./ldpc/CFloodingGpuDecoder.h"
-#include "./ldpc/ADMM_GPU_Decoder.h"
-//#include "./ldpc/ADMM_GPU_Decoder_16b.h"
+//#include "./ldpc/ADMM_GPU_Decoder.h"
+//#include "./ldpc/ADMM_GPU_decoder_16b.h"
 //#include "./ldpc/ADMM_GPU_decoder_64b.h"
-//#include "./ldpc/ADMM_GPU_16b.h"
+#include "./ldpc/ADMM_GPU_16b.h"
 
 #define pi  3.1415926536
 
@@ -137,7 +137,7 @@ int main(int argc, char* argv[])
 	double snr_step = 0.50;
 
         float _alpha   = 0.8;
-        float _mu      = 3.0f;
+        float _mu      = 5.5f;//3.0f;
         float _rho     = 1.9f;
 
 	//int algo                  = 0;
@@ -285,8 +285,9 @@ cudaThreadSynchronize();
 
 
         //ADMM_GPU_decoder_64b decoder_1( NB_FRAMES_IN_PARALLEL );
-	ADMM_GPU_Decoder decoder_1( NB_FRAMES_IN_PARALLEL );
-	//ADMM_GPU_16b decoder_1( NB_FRAMES_IN_PARALLEL );
+	//ADMM_GPU_Decoder decoder_1( NB_FRAMES_IN_PARALLEL );
+	ADMM_GPU_16b decoder_1( NB_FRAMES_IN_PARALLEL );
+        //ADMM_GPU_decoder_16b decoder_1( NB_FRAMES_IN_PARALLEL );
 
 	double Eb_N0 = snr_min;
 
@@ -327,6 +328,7 @@ cudaThreadSynchronize();
 
 	            //int mExeTime = 0;
 		auto start   = chrono::steady_clock::now();
+                //decoder_1.decode(simu_data_1.get_t_noise_data(), simu_data_1.get_t_decode_data(), NOMBRE_ITERATIONS, _alpha, _mu, _rho);
                 decoder_1.decode(simu_data_1.get_t_noise_data(), simu_data_1.get_t_decode_data(), NOMBRE_ITERATIONS, _alpha, _mu, _rho);
 	        //decoder_1.decode(llrs, simu_data_1.get_t_decode_data(), NOMBRE_ITERATIONS );//simu_data_1.get_t_noise_data()
 		auto end     = chrono::steady_clock::now();

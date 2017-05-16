@@ -7,7 +7,6 @@ EXEC=main
 SRC= \
  ../src/ldpc/ADMM_GPU_16b.cu \
  ../src/ldpc/ADMM_GPU_Decoder.cu \
- ../src/ldpc/ADMM_GPU_decoder_16b.cu \
  ../src/gpu/ADMM_GPU_16b.cu \
  ../src/gpu/ADMM_GPU_32b.cu \
  ../src/gpu/ADMM_shared.cu \

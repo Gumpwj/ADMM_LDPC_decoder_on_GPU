@@ -368,15 +368,17 @@ __global__ void ADMM_InitArrays_16b(float* LZr, int N)
 
 //VN 
 __global__ void ADMM_VN_kernel_deg3_16b(
-	const float* _LogLikelihoodRatio, float* OutputFromDecoder, float* LZr, const unsigned int *t_row, int N)
+	const float* _LogLikelihoodRatio, float* OutputFromDecoder, float* LZr, const unsigned int *t_row, int N, float _alpha, float _mu)
 {
-    const int   i      = blockDim.x * blockIdx.x + threadIdx.x;
+        const int   i      = blockDim.x * blockIdx.x + threadIdx.x;
    // const int   idy      = blockDim.y * blockIdx.y + threadIdx.y;
    // const int   i        = idy * N + idx;
-    const float degree   = 1000;
-    const float temp_threshold = degree / 2.0f;
-	const float mu       = 5.5f;//3.0f
-	const float alpha    = 0.8;
+       const float degree   = 1000;
+        const float temp_threshold = degree / 2.0f;
+
+	const float mu       = _mu;   //5.5f;//3.0f
+	const float alpha    = _alpha;   //0.8;
+
 	const float _amu_    = alpha / mu;
 	//const float _2_amu_ = _amu_+ _amu_;
     //const float factor  = 1.0f / (3.0f - _2_amu_);
@@ -493,7 +495,7 @@ __device__ void proj_deg6_v2(float llr[], float v_clip[])
 			sRho = (sorted[i] > s[i]) ? s[i] : sRho;
 		}
 
-		float u[length];
+		//float u[length];
 		#pragma unroll 6
 		for(int i = 0;i < length; i++)
 		{
@@ -505,12 +507,12 @@ __device__ void proj_deg6_v2(float llr[], float v_clip[])
 //CN
 
 __global__ void ADMM_CN_kernel_deg6_16b(
-	const float *OutputFromDecoder, float *Lzr, const unsigned int *t_col1, int *cn_synrome, int N)
+	const float *OutputFromDecoder, float *Lzr, const unsigned int *t_col1, int *cn_synrome, int N, float _rho)
 {
     const int i = blockDim.x * blockIdx.x + threadIdx.x; // NUMERO DU CHECK NODE A CALCULER
    // const int idy = blockDim.y * blockIdx.y + threadIdx.y; // NUMERO DU CHECK NODE A CALCULER
    // const int i   = idy * N + idx;
-    const float rho      = 1.9f;
+    const float rho      = _rho; //1.9f;
     const float un_m_rho = 1.0f - rho;
     const int   degCn    = 6;
     float v_proj[6];
@@ -616,11 +618,11 @@ __global__ void ADMM_CN_kernel_deg6_16b(
 
 //VN
 __global__ void ADMM_VN_kernel_deg3_16b_mod(
-	const float* _LogLikelihoodRatio, float* OutputFromDecoder, float* LZr, const unsigned int *t_row, int N)
+	const float* _LogLikelihoodRatio, float* OutputFromDecoder, float* LZr, const unsigned int *t_row, int N, float _alpha, float _mu)
 {
     const int i             = blockDim.x * blockIdx.x + threadIdx.x;
-	const float mu      = 3.0f;
-	const float  alpha  = 0.8;
+	const float mu      = _mu; //3.0f;
+	const float  alpha  = _alpha; //0.8;
 	const float _amu_   = alpha / mu;
 	const float _2_amu_ = _amu_+ _amu_;
     const float factor  = 1.0f / (3.0f - _2_amu_);
@@ -746,10 +748,10 @@ __global__ void ADMM_VN_kernel_deg3_16b_mod(
 //CN
 
 __global__ void ADMM_CN_kernel_deg6_16b_mod(
-	const float *OutputFromDecoder, float *Lzr, const unsigned int *t_col1, int *cn_synrome, int N)
+	const float *OutputFromDecoder, float *Lzr, const unsigned int *t_col1, int *cn_synrome, int N, float _rho)
 {
     const int i = blockDim.x * blockIdx.x + threadIdx.x; // NUMERO DU CHECK NODE A CALCULER
-    const float rho      = 1.9f;
+    const float rho      = _rho; //1.9f;
     const float un_m_rho = 1.0f - rho;
     const int   degCn    = 6;
     float v_proj[6];
@@ -804,10 +806,10 @@ __global__ void ADMM_CN_kernel_deg6_16b_mod(
 
 //CN 2
 __global__ void ADMM_CN_kernel_deg6_16b_mod2(
-	const float *OutputFromDecoder, float *Lzr, const unsigned int *t_col1, int *cn_synrome, int N)
+	const float *OutputFromDecoder, float *Lzr, const unsigned int *t_col1, int *cn_synrome, int N, float _rho)
 {
     int i = blockDim.x * blockIdx.x + threadIdx.x; // NUMERO DU CHECK NODE A CALCULER
-    const float rho      = 1.9f;
+    const float rho      = _rho;//1.9f;
     const float un_m_rho = 1.0f - rho;
     const int   degCn    = 6;
     float v_proj[6];

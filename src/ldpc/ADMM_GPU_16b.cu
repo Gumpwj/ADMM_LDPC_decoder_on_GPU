@@ -168,11 +168,16 @@ ADMM_GPU_16b::~ADMM_GPU_16b()
 
 //#define CHECK_ERRORS
 
-void ADMM_GPU_16b::decode(float* llrs, int* bits, int nb_iters)
+void ADMM_GPU_16b::decode(float* llrs, int* bits, int nb_iters, float _alpha, float _mu, float _rho)
 {
 //	#define CHECK_ERRORS
-    cudaError_t Status;
+        cudaError_t Status;
 	int threadsPerBlock     = 128;
+
+        const float alpha = _alpha;
+        const float mu    = _mu;
+        const float rho = _rho;
+       
     int blocksPerGridNode   = (VNs_per_load  + threadsPerBlock - 1) / threadsPerBlock;
     int blocksPerGridCheck  = (CNs_per_load  + threadsPerBlock - 1) / threadsPerBlock;
     int blocksPerGridMsgs   = (MSGs_per_load + threadsPerBlock - 1) / threadsPerBlock;
@@ -197,14 +202,14 @@ void ADMM_GPU_16b::decode(float* llrs, int* bits, int nb_iters)
     	//ADMM_VN_kernel_deg3_16b_mod<<<blocksPerGridNode,  threadsPerBlock>>>
         
     	ADMM_VN_kernel_deg3_16b<<<blocksPerGridNode,  threadsPerBlock>>>
-    			(d_iLLR, d_oLLR, LZr, d_t_row, VNs_per_load);
+    			(d_iLLR, d_oLLR, LZr, d_t_row, VNs_per_load, alpha, mu);
     #ifdef CHECK_ERRORS
         ERROR_CHECK(cudaGetLastError( ), __FILE__, __LINE__);
     #endif
     Status = cudaMemcpy(h_iLLR, d_oLLR, VNs_per_load * sizeof(float), cudaMemcpyDeviceToHost);
         ERROR_CHECK(Status, __FILE__, __LINE__);
 
-     FILE* f1 = fopen("h_iLLR_16.json", "w");
+    /* FILE* f1 = fopen("h_iLLR_16.json", "w");
           for(int m=1; m<frames+1; m++){
 	    for(int i=0; i<VNs_per_frame; i++){
                 //int off = VNs_per_frame * k;
@@ -212,7 +217,7 @@ void ADMM_GPU_16b::decode(float* llrs, int* bits, int nb_iters)
               }
 	    
 	}
-        fclose( f1 );
+        fclose( f1 );*/
 
 
 
@@ -220,7 +225,7 @@ void ADMM_GPU_16b::decode(float* llrs, int* bits, int nb_iters)
        // 		(d_oLLR, LZr, d_t_col, d_hDecision, CNs_per_load);
 
         ADMM_CN_kernel_deg6_16b<<<blocksPerGridCheck, threadsPerBlock>>>
-        		(d_oLLR, LZr, d_t_col, d_hDecision, CNs_per_load);
+        		(d_oLLR, LZr, d_t_col, d_hDecision, CNs_per_load, rho);
     #ifdef CHECK_ERRORS
         ERROR_CHECK(cudaGetLastError( ), __FILE__, __LINE__);
     #endif
@@ -258,13 +263,13 @@ void ADMM_GPU_16b::decode(float* llrs, int* bits, int nb_iters)
     ERROR_CHECK(Status, __FILE__, __LINE__);
    #endif
 
-     FILE* fp = fopen("bits64.txt", "w");
+    /* FILE* fp = fopen("bits64.txt", "w");
       for(int m=1; m<frames+1; m++){
 	    for(int i=0; i<VNs_per_frame; i++){
                 //int off = VNs_per_frame * k;
                 fprintf(fp, "frame %d   bit %4d   value %d\n", m, i, bits[i]);
 	    }
 	}
-      fclose(fp);
+      fclose(fp);*/
 }
 

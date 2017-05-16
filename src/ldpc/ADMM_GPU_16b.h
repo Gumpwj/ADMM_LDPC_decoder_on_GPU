@@ -63,6 +63,6 @@ public:
     ADMM_GPU_16b( int frames );
     ~ADMM_GPU_16b();
     void initialize();
-    void decode(float* llrs, int* bits, int nb_iters);
+    void decode(float* llrs, int* bits, int nb_iters, float _alpha, float _mu, float _rho);
 };
 

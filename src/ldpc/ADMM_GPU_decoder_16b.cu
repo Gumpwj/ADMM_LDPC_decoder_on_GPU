@@ -102,11 +102,16 @@ ADMM_GPU_decoder_16b::~ADMM_GPU_decoder_16b()
 	Status = cudaFree(LZr);				ERROR_CHECK(Status, (char*)__FILE__, __LINE__);
 }
 
-void ADMM_GPU_decoder_16b::decode(float* llrs, int* bits, int nb_iters)
+void ADMM_GPU_decoder_16b::decode(float* llrs, int* bits, int nb_iters, float _alpha, float _mu, float _rho)
 {
 //	#define CHECK_ERRORS
-    cudaError_t Status;
+         cudaError_t Status;
 	int threadsPerBlock     = 128;
+
+        const float alpha = _alpha;
+        const float mu    = _mu;
+        const float rho = _rho;
+
     int blocksPerGridNode   = (VNs_per_load  + threadsPerBlock - 1) / threadsPerBlock;
     int blocksPerGridCheck  = (CNs_per_load  + threadsPerBlock - 1) / threadsPerBlock;
     int blocksPerGridMsgs   = (MSGs_per_load + threadsPerBlock - 1) / threadsPerBlock;
@@ -129,13 +134,13 @@ void ADMM_GPU_decoder_16b::decode(float* llrs, int* bits, int nb_iters)
     for(int k = 0; k < 200; k++)
     {
     	ADMM_VN_kernel_deg3_16b<<<blocksPerGridNode,  threadsPerBlock>>>
-    			(d_iLLR, d_oLLR, LZr, d_t_row, VNs_per_load);
+    			(d_iLLR, d_oLLR, LZr, d_t_row, VNs_per_load, alpha, mu);
 		#ifdef CHECK_ERRORS
         	ERROR_CHECK(cudaGetLastError( ), __FILE__, __LINE__);
 		#endif
 
         ADMM_CN_kernel_deg6_16b<<<blocksPerGridCheck, threadsPerBlock>>>
-        		(d_oLLR, LZr, d_t_col, d_hDecision, CNs_per_load);
+        		(d_oLLR, LZr, d_t_col, d_hDecision, CNs_per_load, rho);
 		#ifdef CHECK_ERRORS
         	ERROR_CHECK(cudaGetLastError( ), __FILE__, __LINE__);
 		#endif

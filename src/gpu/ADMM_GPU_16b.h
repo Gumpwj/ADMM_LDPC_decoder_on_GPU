@@ -28,40 +28,48 @@ extern __global__ void ADMM_InitArrays(float *LZr,  int N);
 
 extern __global__ void ADMM_InitArrays_16b(float *LZr,  int N);
 
-extern __global__ void ADMM_VN_kernel_deg3(
+
+/*extern __global__ void ADMM_VN_kernel_deg3(
 	const float *_LogLikelihoodRatio,
 	float *OutputFromDecoder,
 	float *LZr,
 	const unsigned int *t_row,
 	int N);
 
-extern __global__ void ADMM_VN_kernel_deg3_16b(
-	const float *_LogLikelihoodRatio,
-	float *OutputFromDecoder,
-	float *LZr,
-	const unsigned int *t_row,
-	int N);
 
 extern  __global__ void ADMM_CN_kernel_deg6(
 	const float *OutputFromDecoder,
 	float *LZr,
 	const unsigned int *t_col1,
 	int *cn_synrome,
-	int N);
+	int N);*/
+
+extern __global__ void ADMM_VN_kernel_deg3_16b(
+	const float *_LogLikelihoodRatio,
+	float *OutputFromDecoder,
+	float *LZr,
+	const unsigned int *t_row,
+	int N,
+        float _alpha,
+        float _mu);
+
 
 extern  __global__ void ADMM_CN_kernel_deg6_16b(
 	const float *OutputFromDecoder,
 	float *LZr,
 	const unsigned int *t_col1,
 	int *cn_synrome,
-	int N);
+	int N,
+        float _rho);
 
 extern __global__ void ADMM_VN_kernel_deg3_16b_mod(
 	const float *_LogLikelihoodRatio,
 	float *OutputFromDecoder,
 	float *LZr,
 	const unsigned int *t_row,
-	int N);
+	int N,
+        float _alpha,
+        float _mu);
 
 
 extern  __global__ void ADMM_CN_kernel_deg6_16b_mod(
@@ -69,14 +77,16 @@ extern  __global__ void ADMM_CN_kernel_deg6_16b_mod(
 	float *LZr,
 	const unsigned int *t_col1,
 	int *cn_synrome,
-	int N);
+	int N,
+        int _rho);
 
 extern  __global__ void ADMM_CN_kernel_deg6_16b_mod2(
 	const float *OutputFromDecoder,
 	float *LZr,
 	const unsigned int *t_col1,
 	int *cn_synrome,
-	int N);
+	int N,
+        int _rho);
 
 extern  __global__ void ADMM_HardDecision(
 				float *OutputFromDecoder,
